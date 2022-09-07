@@ -1,0 +1,5 @@
+node_modules
+src/locales
+generated
+scripts
+e2e/bridge

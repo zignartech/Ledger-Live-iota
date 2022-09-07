@@ -1,0 +1,89 @@
+# Use the node resolver because pnpm nests modules.
+def relative_path(module_name)
+  module_pathname = Pathname.new File.dirname(`node --print "require.resolve('#{module_name}/package.json')"`)
+  module_pathname.relative_path_from(Pathname.new File.absolute_path ".")
+end
+
+expo_autolinking = File.join(relative_path("expo"), "scripts/autolinking")
+rct_text = File.join(relative_path("react-native"), "Libraries/Text")
+
+require expo_autolinking
+require_relative '../node_modules/react-native/scripts/react_native_pods'
+require_relative '../node_modules/@react-native-community/cli-platform-ios/native_modules'
+
+platform :ios, '12.0'
+install! 'cocoapods', :deterministic_uuids => false
+
+flipperkit_version = '0.162.0'
+
+# Without the .pnpm path expo autolinking script will fail to locate transitive dependencies.
+platform_separator = Gem.win_platform? ? ";" : ":"
+pnpm_hoisted_node_modules = File.expand_path(
+  File.join(
+    File.dirname(__FILE__), "..", "..", "..", "node_modules", ".pnpm", "node_modules"
+  )
+)
+common_node_modules = File.expand_path(
+  File.join(
+    File.dirname(__FILE__), "..", "..", "..", "libs", "ledger-live-common", "node_modules"
+  )
+)
+
+ENV["NODE_PATH"] ||= pnpm_hoisted_node_modules + platform_separator + common_node_modules
+
+target 'ledgerlivemobile' do
+  use_expo_modules!
+  config = use_native_modules!
+
+  # Flags change depending on the env values.
+  flags = get_default_flags()
+
+  use_react_native!(
+    :path => config[:reactNativePath],
+    # to enable hermes on iOS, change `false` to `true` and then install pods
+    :hermes_enabled => true,
+    :fabric_enabled => flags[:fabric_enabled],
+    # An absolute path to your application root.
+    :app_path => "#{Pod::Config.instance.installation_root}/.."
+  )
+
+  pod 'React-RCTText', :path => rct_text, :modular_headers => true
+
+  target 'ledgerlivemobileTests' do
+    inherit! :search_paths
+    # Pods for testing
+  end
+
+  # Enables Flipper.
+  #
+  # Note that if you have use_frameworks! enabled, Flipper will not work and
+  # you should disable these next few lines.
+  use_flipper!({ 'Flipper' => flipperkit_version }) # should match the version of your Flipper client app
+  
+  post_install do |installer|
+    react_native_post_install(installer)
+    flipper_post_install(installer)
+    __apply_Xcode_12_5_M1_post_install_workaround(installer)
+
+    # Workaround build error for classic quoted imports
+    # See: https://github.com/expo/expo/issues/15622#issuecomment-997225774
+    installer.pods_project.targets.each do |target|
+      target.build_configurations.each do |config|
+        if ['RNAnalytics', 'react-native-fast-crypto'].include? target.name
+          config.build_settings["USE_HEADERMAP"] = "NO"
+        end
+      end
+    end
+
+
+    # See: https://github.com/facebook/react-native/issues/31941
+    installer.aggregate_targets.each do |aggregate_target|
+      aggregate_target.user_project.native_targets.each do |target|
+        target.build_configurations.each do |config|
+          config.build_settings['LIBRARY_SEARCH_PATHS'] = ['$(SDKROOT)/usr/lib/swift', '$(inherited)']
+        end
+      end
+      aggregate_target.user_project.save
+    end
+  end
+end

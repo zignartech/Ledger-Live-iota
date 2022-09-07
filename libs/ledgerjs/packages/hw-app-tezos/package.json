@@ -1,0 +1,49 @@
+{
+  "name": "@ledgerhq/hw-app-tezos",
+  "version": "6.27.3",
+  "description": "Ledger Hardware Wallet Tezos Application API",
+  "keywords": [
+    "Ledger",
+    "LedgerWallet",
+    "xtz",
+    "Tezos",
+    "NanoS",
+    "Blue",
+    "Hardware Wallet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LedgerHQ/ledger-live.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LedgerHQ/ledger-live/issues"
+  },
+  "homepage": "https://github.com/LedgerHQ/ledger-live/tree/develop/libs/ledgerjs/packages/hw-app-tezos",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/Tezos.js",
+  "module": "lib-es/Tezos.js",
+  "types": "lib/Tezos.d.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ledgerhq/hw-transport": "workspace:^",
+    "blake2b": "^2.1.4",
+    "bs58check": "^2.1.2",
+    "invariant": "^2.2.4"
+  },
+  "devDependencies": {
+    "@ledgerhq/hw-transport-mocker": "workspace:^"
+  },
+  "scripts": {
+    "clean": "rimraf lib lib-es",
+    "build": "tsc && tsc -m ES6 --outDir lib-es",
+    "prewatch": "pnpm build",
+    "watch": "tsc --watch",
+    "doc": "documentation readme src/** --section=API --pe ts --re ts --re d.ts",
+    "lint": "eslint ./src --no-error-on-unmatched-pattern --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest"
+  },
+  "gitHead": "dd0dea64b58e5a9125c8a422dcffd29e5ef6abec"
+}

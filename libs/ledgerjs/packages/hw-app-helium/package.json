@@ -1,0 +1,55 @@
+{
+  "name": "@ledgerhq/hw-app-helium",
+  "version": "6.28.2",
+  "description": "Ledger Hardware Wallet Helium Application API",
+  "keywords": [
+    "Ledger",
+    "LedgerWallet",
+    "Helium",
+    "HNT",
+    "NanoS",
+    "NanoX",
+    "Hardware Wallet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LedgerHQ/ledger-live.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LedgerHQ/ledger-live/issues"
+  },
+  "homepage": "https://github.com/LedgerHQ/ledger-live/tree/develop/libs/ledgerjs/packages/hw-app-helium",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/Helium.js",
+  "module": "lib-es/Helium.js",
+  "types": "lib/Helium.d.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@helium/address": "^4.0.0",
+    "@helium/proto": "^1.5.0",
+    "@helium/transactions": "^4.1.0",
+    "@ledgerhq/errors": "workspace:^",
+    "@ledgerhq/hw-transport": "workspace:^",
+    "@ledgerhq/logs": "workspace:^",
+    "bignumber.js": "^9.0.1",
+    "bip32-path": "^0.4.2",
+    "long": "^5.2.0"
+  },
+  "devDependencies": {
+    "@ledgerhq/hw-transport-mocker": "workspace:^",
+    "@ledgerhq/hw-transport-node-speculos": "workspace:^",
+    "axios": "^0.26.1"
+  },
+  "scripts": {
+    "clean": "rimraf lib lib-es",
+    "build": "tsc && tsc -m ES6 --outDir lib-es",
+    "prewatch": "pnpm build",
+    "watch": "tsc --watch",
+    "doc": "documentation readme src/** --section=API --pe ts --re ts --re d.ts",
+    "lint": "eslint ./src --no-error-on-unmatched-pattern --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest"
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "name": "@ledgerhq/hw-transport-node-ble",
+  "version": "6.27.3",
+  "description": "Ledger Hardware Wallet Bluetooth BLE transport for Node.js (noble)",
+  "keywords": [
+    "Ledger",
+    "LedgerWallet",
+    "NanoS",
+    "Blue",
+    "Hardware Wallet",
+    "bluetooth",
+    "node",
+    "noble"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LedgerHQ/ledger-live.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LedgerHQ/ledger-live/issues"
+  },
+  "homepage": "https://github.com/LedgerHQ/ledger-live/tree/develop/libs/ledgerjs/packages/hw-transport-node-ble",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/TransportNodeBle.js",
+  "module": "lib-es/TransportNodeBle.js",
+  "types": "lib/TransportNodeBle.d.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@abandonware/noble": "1.9.2-15",
+    "@ledgerhq/devices": "workspace:^",
+    "@ledgerhq/errors": "workspace:^",
+    "@ledgerhq/hw-transport": "workspace:^",
+    "@ledgerhq/logs": "workspace:^",
+    "invariant": "^2.2.4",
+    "rxjs": "6"
+  },
+  "scripts": {
+    "clean": "rimraf lib lib-es",
+    "build": "tsc && tsc -m ES6 --outDir lib-es",
+    "prewatch": "pnpm build",
+    "watch": "tsc --watch",
+    "lint": "eslint ./src --no-error-on-unmatched-pattern --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest"
+  },
+  "gitHead": "dd0dea64b58e5a9125c8a422dcffd29e5ef6abec"
+}

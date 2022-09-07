@@ -1,0 +1,94 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        buildToolsVersion = "30.0.3"
+        minSdkVersion = 24
+        compileSdkVersion = 30
+        targetSdkVersion = 30
+        kotlinVersion = "1.6.0"
+        androidXCore = "1.6.0"
+        if (System.properties['os.arch'] == "aarch64") {
+            // For M1 Users we need to use the NDK 24 which added support for aarch64
+            ndkVersion = "24.0.8215888"
+        } else {
+            // Otherwise we default to the side-by-side NDK version from AGP.
+            ndkVersion = "21.4.7075529"
+        }
+    }
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:4.2.2")
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion"
+        classpath "org.jetbrains.kotlin:kotlin-android-extensions:$kotlinVersion"
+        classpath 'com.google.gms:google-services:4.3.10'
+    }
+    gradle.projectsEvaluated {
+        tasks.withType(JavaCompile) {
+            options.compilerArgs << "-Xlint:deprecation"
+        }
+    }
+}
+
+allprojects {
+    repositories {
+        mavenLocal()
+        maven {
+            // All of React Native (JS, Obj-C sources, Android binaries) is installed from npm
+            url("$rootDir/../node_modules/react-native/android")
+        }
+        mavenCentral {
+            // We don't want to fetch react-native from Maven Central as there are
+            // older versions over there.
+            content {
+                excludeGroup "com.facebook.react"
+            }
+        }
+        google()
+        maven { url 'https://jitpack.io' }
+        maven {
+            url "$rootDir/../node_modules/detox/Detox-android"
+        }
+        maven {
+            url "$rootDir/../node_modules/expo-camera/android/maven"
+        }
+        jcenter() {
+            content {
+                includeModule("com.theartofdev.edmodo", "android-image-cropper") // for expo-image-picker
+            }
+        }
+    }
+    configurations.all {
+        resolutionStrategy {
+            dependencySubstitution {
+                substitute module("com.redmadrobot:input-mask-android:6.0.0") using module('com.github.RedMadRobot:input-mask-android:6.0.0')
+            }
+        }
+    }
+}
+
+subprojects {
+    // Force all subprojects to use one and only one set of versions
+    afterEvaluate {project ->
+        if (project.hasProperty("android")) {
+            android {
+                compileSdkVersion rootProject.ext.compileSdkVersion
+                buildToolsVersion rootProject.ext.buildToolsVersion
+                defaultConfig {
+                    minSdkVersion rootProject.ext.minSdkVersion
+                    targetSdkVersion rootProject.ext.targetSdkVersion
+                }
+                compileOptions {
+                    sourceCompatibility JavaVersion.VERSION_1_8
+                    targetCompatibility JavaVersion.VERSION_1_8
+                    kotlinVersion = rootProject.ext.kotlinVersion
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,50 @@
+{
+  "name": "@ledgerhq/hw-transport-node-hid-singleton",
+  "version": "6.27.4",
+  "description": "Ledger Hardware Wallet Node implementation of the communication layer, using node-hid and usb-detection",
+  "keywords": [
+    "Ledger",
+    "LedgerWallet",
+    "hid",
+    "node-hid",
+    "NanoS",
+    "Blue",
+    "Hardware Wallet"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LedgerHQ/ledger-live.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LedgerHQ/ledger-live/issues"
+  },
+  "homepage": "https://github.com/LedgerHQ/ledger-live/tree/develop/libs/ledgerjs/packages/hw-transport-node-hid-singleton",
+  "publishConfig": {
+    "access": "public"
+  },
+  "main": "lib/TransportNodeHid.js",
+  "module": "lib-es/TransportNodeHid.js",
+  "types": "lib/TransportNodeHid.d.ts",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@ledgerhq/devices": "workspace:^",
+    "@ledgerhq/errors": "workspace:^",
+    "@ledgerhq/hw-transport": "workspace:^",
+    "@ledgerhq/hw-transport-node-hid-noevents": "workspace:^",
+    "@ledgerhq/logs": "workspace:^",
+    "lodash": "^4.17.21",
+    "node-hid": "2.1.1",
+    "usb-detection": "4.13.0"
+  },
+  "scripts": {
+    "clean": "rimraf lib lib-es",
+    "build": "tsc && tsc -m ES6 --outDir lib-es",
+    "prewatch": "pnpm build",
+    "watch": "tsc --watch",
+    "doc": "documentation readme src/** --section=API --pe ts --re ts --re d.ts",
+    "lint": "eslint ./src --no-error-on-unmatched-pattern --ext .ts,.tsx",
+    "lint:fix": "pnpm lint --fix",
+    "test": "jest"
+  },
+  "gitHead": "dd0dea64b58e5a9125c8a422dcffd29e5ef6abec"
+}

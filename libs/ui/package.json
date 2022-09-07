@@ -1,0 +1,22 @@
+{
+  "name": "ui",
+  "private": true,
+  "version": "0.1.0",
+  "devDependencies": {
+    "@ledgerhq/native-ui": "workspace:^",
+    "@ledgerhq/react-ui": "workspace:^",
+    "@ledgerhq/ui-shared": "workspace:^",
+    "@ledgerhq/icons-ui": "workspace:^",
+    "@ledgerhq/crypto-icons-ui": "workspace:^",
+    "@playwright/test": "~1.17.0",
+    "concurrently": "^6.4.0",
+    "json": "^11.0.0",
+    "lint-staged": "^11.2.6"
+  },
+  "scripts": {
+    "pretest:react": "playwright install",
+    "test:react": "node tests/react.script webpack.js && node tests/react.script next.js",
+    "pretest:react:update-snapshots": "playwright install",
+    "test:react:update-snapshots": "env UPDATE_SNAPSHOTS=1 node tests/react.script webpack.js && env UPDATE_SNAPSHOTS=1 node tests/react.script next.js"
+  }
+}
