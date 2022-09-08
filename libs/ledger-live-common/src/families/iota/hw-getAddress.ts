@@ -1,13 +1,13 @@
-import Iota from "@ledgerhq/hw-app-iota";
+import Iota from "./hw-app-iota";
 import type { Resolver } from "../../hw/getAddress/types";
 
-const resolver: Resolver = async (transport, { path, verify }) => {
+const resolver: Resolver = async (transport, { path }) => {
   const iota = new Iota(transport);
-  const r = await iota.getAddress(path, verify || false);
+  const r = await iota.getAddress(path);
   return {
+    path,
     address: r.address,
     publicKey: r.publicKey,
-    path,
   };
 };
 
