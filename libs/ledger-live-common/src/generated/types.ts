@@ -42,6 +42,10 @@ import { Transaction as hederaTransaction } from "../families/hedera/types";
 import { TransactionRaw as hederaTransactionRaw } from "../families/hedera/types";
 import { TransactionStatus as hederaTransactionStatus } from "../families/hedera/types";
 import { TransactionStatusRaw as hederaTransactionStatusRaw } from "../families/hedera/types";
+import { Transaction as iotaTransaction } from "../families/iota/types";
+import { TransactionRaw as iotaTransactionRaw } from "../families/iota/types";
+import { TransactionStatus as iotaTransactionStatus } from "../families/iota/types";
+import { TransactionStatusRaw as iotaTransactionStatusRaw } from "../families/iota/types";
 import { Transaction as neoTransaction } from "../families/neo/types";
 import { TransactionRaw as neoTransactionRaw } from "../families/neo/types";
 import { TransactionStatus as neoTransactionStatus } from "../families/neo/types";
@@ -87,6 +91,7 @@ export type Transaction =
   | evmTransaction
   | filecoinTransaction
   | hederaTransaction
+  | iotaTransaction
   | neoTransaction
   | osmosisTransaction
   | polkadotTransaction
@@ -108,6 +113,7 @@ export type TransactionRaw =
   | evmTransactionRaw
   | filecoinTransactionRaw
   | hederaTransactionRaw
+  | iotaTransactionRaw
   | neoTransactionRaw
   | osmosisTransactionRaw
   | polkadotTransactionRaw
@@ -129,6 +135,7 @@ export type TransactionStatus =
   | evmTransactionStatus
   | filecoinTransactionStatus
   | hederaTransactionStatus
+  | iotaTransactionStatus
   | neoTransactionStatus
   | osmosisTransactionStatus
   | polkadotTransactionStatus
@@ -150,6 +157,7 @@ export type TransactionStatusRaw =
   | evmTransactionStatusRaw
   | filecoinTransactionStatusRaw
   | hederaTransactionStatusRaw
+  | iotaTransactionStatusRaw
   | neoTransactionStatusRaw
   | osmosisTransactionStatusRaw
   | polkadotTransactionStatusRaw

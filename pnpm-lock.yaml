@@ -1093,7 +1093,7 @@ importers:
       '@ledgerhq/cryptoassets': link:../ledgerjs/packages/cryptoassets
       '@ledgerhq/devices': link:../ledgerjs/packages/devices
       '@ledgerhq/errors': link:../ledgerjs/packages/errors
-      '@ledgerhq/hw-app-algorand': link:../ledgerjs/packages/hw-app-algorand
+      '@ledgerhq/hw-app-algorand': link:../ledgerjs/packages/hw-app-iota
       '@ledgerhq/hw-app-btc': link:../ledgerjs/packages/hw-app-btc
       '@ledgerhq/hw-app-cosmos': link:../ledgerjs/packages/hw-app-cosmos
       '@ledgerhq/hw-app-eth': link:../ledgerjs/packages/hw-app-eth
@@ -1586,6 +1586,25 @@ importers:
       ts-jest: 28.0.7_5ohzrmm2xby2kpbdtr5cjigoti
       ts-node: 10.7.0_33lso24kgdvwdhve7eirdtgycu
       typescript: 4.6.4
+
+  libs/ledgerjs/packages/hw-app-iota:
+    specifiers:
+      '@ledgerhq/errors': workspace:^
+      '@ledgerhq/hw-transport': workspace:^
+      '@ledgerhq/hw-transport-mocker': workspace:^
+      bip32-path: ^0.4.2
+      hi-base32: ^0.5.1
+      js-sha512: ^0.8.0
+      tweetnacl: ^1.0.3
+    dependencies:
+      '@ledgerhq/errors': link:../errors
+      '@ledgerhq/hw-transport': link:../hw-transport
+      bip32-path: 0.4.2
+      hi-base32: 0.5.1
+      js-sha512: 0.8.0
+      tweetnacl: 1.0.3
+    devDependencies:
+      '@ledgerhq/hw-transport-mocker': link:../hw-transport-mocker
 
   libs/ledgerjs/packages/hw-app-polkadot:
     specifiers:
@@ -22798,7 +22817,7 @@ packages:
     dev: false
 
   /bip32-path/0.4.2:
-    resolution: {integrity: sha1-XbBBataCJxLwd4NuJVe4aXwMfJk=}
+    resolution: {integrity: sha512-ZBMCELjJfcNMkz5bDuJ1WrYvjlhEF5k6mQ8vUr4N7MbVRsXei7ZOg8VhhwMfNiW68NWmLkgkc6WvTickrLGprQ==}
     dev: false
 
   /bip32/2.0.5:
@@ -23639,7 +23658,7 @@ packages:
       mkdirp: 0.5.6
       move-concurrently: 1.0.1
       p-map: 3.0.0
-      promise-inflight: 1.0.1_bluebird@3.7.2
+      promise-inflight: 1.0.1
       rimraf: 2.7.1
       ssri: 7.1.1
       unique-filename: 1.1.1
@@ -25040,7 +25059,7 @@ packages:
     dev: false
 
   /core-util-is/1.0.2:
-    resolution: {integrity: sha1-tf1UIgqivFq1eqtxQMlAdUUDwac=}
+    resolution: {integrity: sha512-3lqz5YjWTYnW6dlDa5TLaTCcShfar1e40rmcJVwCBJC6mWlFuj0eCHIElmG1g5kyuJ/GD+8Wn4FFCcz4gJPfaQ==}
 
   /core-util-is/1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -44569,7 +44588,6 @@ packages:
     peerDependenciesMeta:
       bluebird:
         optional: true
-    dev: true
 
   /promise-inflight/1.0.1_bluebird@3.7.2:
     resolution: {integrity: sha512-6zWPyEOFaQBJYcGMHBKTKJ3u6TBsnMFOIZSa6ce1e/ZrrsOlnHRHbabMjLiBYKp+n44X9eUI6VUPaukCXHuG4g==}

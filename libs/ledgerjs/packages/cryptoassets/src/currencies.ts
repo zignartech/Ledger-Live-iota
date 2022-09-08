@@ -1533,7 +1533,12 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
         magnitude: 8,
       },
     ],
-    explorerViews: [],
+    explorerViews: [
+      {
+        address: "https://explorer.iota.org/mainnet/addr/$address",
+        tx: "https://explorer.iota.org/mainnet/message/$hash",
+      }
+    ],
   },
   iov: {
     type: "CryptoCurrency",
