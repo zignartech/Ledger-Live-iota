@@ -1,5 +1,6 @@
 import Struct from 'struct';
 import Bundle from 'iota.lib.js/lib/crypto/bundle/bundle.js';
+import Transport from "@ledgerhq/hw-transport";
 import {
   addChecksum,
   noChecksum,
@@ -9,6 +10,9 @@ import bippath from 'bip32-path';
 import semver from 'semver';
 import { getErrorMessage } from './error';
 import * as guards from './guards';
+import { any } from 'joi';
+import List from '@hashgraph/sdk/lib/transaction/List';
+import { list } from '@celo/wallet-ledger/lib/tokens';
 
 /**
  * IOTA API
@@ -44,6 +48,11 @@ const EMPTY_TAG = '9'.repeat(TAG_LENGTH);
  * const iota = new Iota(transport);
  */
 class Iota {
+  transport: Transport;
+  config: any;
+  security: number;
+  pathArray: any;
+
   constructor(transport) {
     transport.decorateAppAPIMethods(
       this,
@@ -105,7 +114,7 @@ class Iota {
    * @example
    * iota.getAddress(0, { checksum: true });
    **/
-  async getAddress(index, options = {}) {
+  async getAddress(index, options = Struct) {
     this._assertInitialized();
     guards.index(index);
 
@@ -196,7 +205,7 @@ class Iota {
     let pathArray;
     try {
       pathArray = bippath.fromString(path).toPathArray();
-    } catch (e) {
+    } catch (e: Struct) {
       throw new Error('"path" invalid: ' + e.message);
     }
 
@@ -454,8 +463,10 @@ class Iota {
         SIGNATURE_FRAGMENT_SLICE_LENGTH
       );
       // and set the first fragment
-      tx.signatureMessageFragment = signatureFragments.shift();
-
+      if (signatureFragments != null) {
+        tx.signatureMessageFragment = signatureFragments.shift();
+      }
+      
       // set the signature fragments for all successive meta transactions
       const address = tx.address;
       for (let j = 1; j < this.security; j++) {
@@ -465,7 +476,9 @@ class Iota {
 
         const tx = bundle.bundle[i];
         if (tx.address === address && tx.value === 0) {
-          tx.signatureMessageFragment = signatureFragments.shift();
+          if (signatureFragments != null) {
+            tx.signatureMessageFragment = signatureFragments.shift();
+          }
         }
       }
     }
@@ -509,7 +522,7 @@ class Iota {
       return true;
     }
 
-    return set.length === transfers.length + inputs.length;
+    return set.size === transfers.length + inputs.length;
   }
 
   async _prepareTransfers(transfers, inputs, remainder, now) {
@@ -585,7 +598,7 @@ class Iota {
     await this._signBundle(bundle, addressKeyIndices);
 
     // compute and return the corresponding trytes
-    const bundleTrytes = [];
+    const bundleTrytes: any[] = [];
     bundle.bundle.forEach((tx) => bundleTrytes.push(transactionTrytes(tx)));
     return bundleTrytes.reverse();
   }
@@ -655,7 +668,7 @@ class Iota {
     try {
       transport.setExchangeTimeout(timeout);
       return await transport.send(CLA, ins, p1, p2, data);
-    } catch (error) {
+    } catch (error: any) {
       // update the message, if status code is present
       if (error.statusCode) {
         error.message = getErrorMessage(error.statusCode) || error.message;
