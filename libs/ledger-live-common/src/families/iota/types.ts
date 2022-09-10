@@ -5,12 +5,7 @@ import type {
   TransactionStatusCommonRaw,
 } from "@ledgerhq/types-live";
 
-export type NetworkInfo = {
-  family: "iota";
-};
-export type NetworkInfoRaw = {
-  family: "iota";
-};
+
 export type Transaction = TransactionCommon & {
   family: "iota";
 };

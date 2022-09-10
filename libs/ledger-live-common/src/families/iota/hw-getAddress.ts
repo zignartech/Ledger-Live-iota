@@ -1,16 +1,17 @@
 import Iota from "./hw-app-iota";
-import Transport from "@ledgerhq/hw-transport-node-hid";
+import { log } from "@ledgerhq/logs";
 import type { Resolver } from "../../hw/getAddress/types";
 
 const resolver: Resolver = async (transport, { path }) => {
-
+  log("IOTA GET ADDRESS");
   const iota = new Iota(transport);
-  await iota.setActiveSeed("44'/4218'/0'/0'");
-  const r = await iota.getAddress(0, {checksum: true});
+
+  const r = await iota.getAddress("44'/1'/0'/0'/0'", { prefix: 'iota' });
+  log("Address retrieved: " + r);
   return {
     path,
-    address: r.address,
-    publicKey: r.publicKey,
+    address: r,
+    publicKey: ""
   };
 };
 

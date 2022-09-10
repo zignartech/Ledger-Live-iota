@@ -123,6 +123,7 @@
     "@ethereumjs/tx": "^3.5.0",
     "@ethersproject/shims": "^5.7.0",
     "@hashgraph/sdk": "^2.10.1",
+    "@iota/iota.js": "^1.8.6" ,
     "@keplr-wallet/cosmos": "^0.9.16",
     "@ledgerhq/compressjs": "github:LedgerHQ/compressjs#d9e8e4d994923e0ea76a32b97289bcccfe71b82e",
     "@ledgerhq/cryptoassets": "workspace:^",
