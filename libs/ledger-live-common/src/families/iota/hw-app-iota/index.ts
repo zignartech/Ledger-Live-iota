@@ -234,7 +234,15 @@ class Iota {
   }
 
   async _signSingle(index) {
-    
+    const response = await this._sendCommand(
+      Commands.INS_SIGN_SINGLE,
+      index,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+
+    // unpack the response
   }
 
   async _getAppConfig() {

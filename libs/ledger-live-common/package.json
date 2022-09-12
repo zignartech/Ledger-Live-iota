@@ -197,7 +197,6 @@
     "expect": "^27.4.6",
     "generic-pool": "^3.8.2",
     "invariant": "^2.2.2",
-    "iota.lib.js": "^0.5.3",
     "isomorphic-ws": "^4.0.1",
     "joi": "^17.4.0",
     "json-rpc-2.0": "^0.2.19",
