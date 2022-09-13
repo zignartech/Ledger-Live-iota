@@ -41,6 +41,15 @@ const SIGNATURE_UNLOCK_BLOCK_LENGTH =
     1 + 1 + ED25519_PUBLIC_KEY_LENGTH + ED25519_SIGNATURE_LENGTH;
 const REFERENCE_UNLOCK_BLOCK_LENGTH = 1 + 2;
 
+const Flows = {
+  FlowMainMenu: 0,
+  FlowGeneratingAddresses: 1,
+  FlowGenericError: 2,
+  FlowRejected: 3,
+  FlowSignedSuccessfully: 4,
+  FlowSigning: 5,
+}
+
 /**
  * Class for the interaction with the Ledger IOTA application.
  *
@@ -183,6 +192,66 @@ class Iota {
     return data.subarray(0, state.data_length);
   }
 
+  async _showMainFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowMainMenu,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showGeneratingAddressesFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowGeneratingAddresses,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showGenericErrorFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowGenericError,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showRejectedFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowRejected,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showSignedSuccessfullyFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowSignedSuccessfully,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showSigningFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowSigning,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
   async _prepareSigning(ramainderIdx, bip32Idx, bip32Change, p2) {
     const prepareSigningInStruct = new Struct()
       .word32Ule('remainder_index')
@@ -303,3 +372,5 @@ class Iota {
 }
 
 export default Iota;
+
+export { TIMEOUT_CMD_NON_USER_INTERACTION, Commands }
