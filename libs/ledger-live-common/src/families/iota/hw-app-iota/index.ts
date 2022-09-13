@@ -4,6 +4,8 @@ import bech32 from 'bech32';
 import { getErrorMessage } from './error';
 import Transport from '@ledgerhq/hw-transport';
 import { _0Xbtc } from '../../../data/icons/react';
+import { log } from "@ledgerhq/logs";
+import { u8 } from '@polkadot/types';
 
 /**
  * IOTA API
@@ -36,10 +38,6 @@ const TIMEOUT_CMD_USER_INTERACTION = 150000;
 
 const ED25519_PUBLIC_KEY_LENGTH = 32;
 const ED25519_SIGNATURE_LENGTH = 64;
-
-const SIGNATURE_UNLOCK_BLOCK_LENGTH =
-    1 + 1 + ED25519_PUBLIC_KEY_LENGTH + ED25519_SIGNATURE_LENGTH;
-const REFERENCE_UNLOCK_BLOCK_LENGTH = 1 + 2;
 
 /**
  * Class for the interaction with the Ledger IOTA application.
@@ -241,8 +239,26 @@ class Iota {
       undefined,
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
-
-    // unpack the response
+    const signatureType = response.at(0);
+    let data = new Struct();
+    switch (signatureType) {
+      case 0:
+        data
+          .word8('signature_type')
+          .word8('unknown') // TODO: replace with correct block name
+          .array('ed25519_public_key', ED25519_PUBLIC_KEY_LENGTH, 'word8')
+          .array('ed25519_signature', ED25519_SIGNATURE_LENGTH, 'word8');
+        break;
+      case 1: 
+        data
+          .word8('signature_type')
+          .array('data', 2, 'word8') // TODO: replace with correct block name
+        break;
+      default:
+        throw new Error('packable error: ' + 'Invalid variant');
+        // TODO: return the error
+    }
+    return data;
   }
 
   async _getAppConfig() {
