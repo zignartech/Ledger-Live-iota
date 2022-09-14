@@ -179,6 +179,16 @@ class Iota {
     return data;
   }
 
+  async _writeDataBlock(blockNr, data) {
+    await this._sendCommand(
+      Commands.INS_PREPARE_SIGNING,
+      blockNr,
+      0,
+      data,
+      TIMEOUT_CMD_USER_INTERACTION
+    );
+  }
+
   async _getData() {
     const state = await this._getDataBufferState();
 
