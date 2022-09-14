@@ -4,6 +4,8 @@ import bech32 from 'bech32';
 import { getErrorMessage } from './error';
 import Transport from '@ledgerhq/hw-transport';
 import { _0Xbtc } from '../../../data/icons/react';
+import { log } from "@ledgerhq/logs";
+import { u8 } from '@polkadot/types';
 
 /**
  * IOTA API
@@ -40,6 +42,15 @@ const ED25519_SIGNATURE_LENGTH = 64;
 const SIGNATURE_UNLOCK_BLOCK_LENGTH =
     1 + 1 + ED25519_PUBLIC_KEY_LENGTH + ED25519_SIGNATURE_LENGTH;
 const REFERENCE_UNLOCK_BLOCK_LENGTH = 1 + 2;
+
+const Flows = {
+  FlowMainMenu: 0,
+  FlowGeneratingAddresses: 1,
+  FlowGenericError: 2,
+  FlowRejected: 3,
+  FlowSignedSuccessfully: 4,
+  FlowSigning: 5,
+}
 
 /**
  * Class for the interaction with the Ledger IOTA application.
@@ -168,6 +179,16 @@ class Iota {
     return data;
   }
 
+  async _writeDataBlock(blockNr, data) {
+    await this._sendCommand(
+      Commands.INS_PREPARE_SIGNING,
+      blockNr,
+      0,
+      data,
+      TIMEOUT_CMD_USER_INTERACTION
+    );
+  }
+
   async _getData() {
     const state = await this._getDataBufferState();
 
@@ -181,6 +202,66 @@ class Iota {
       offset += block.length;
     }
     return data.subarray(0, state.data_length);
+  }
+
+  async _showMainFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowMainMenu,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showGeneratingAddressesFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowGeneratingAddresses,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showGenericErrorFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowGenericError,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showRejectedFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowRejected,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showSignedSuccessfullyFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowSignedSuccessfully,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+  }
+
+  async _showSigningFlow() {
+    await this._sendCommand(
+      Commands.INS_SHOW_FLOW,
+      Flows.FlowSigning,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
   }
 
   async _prepareSigning(ramainderIdx, bip32Idx, bip32Change, p2) {
@@ -241,8 +322,26 @@ class Iota {
       undefined,
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
-
-    // unpack the response
+    const signatureType = response.at(0);
+    let data = new Struct();
+    switch (signatureType) {
+      case 0:
+        data
+          .word8('signature_type')
+          .word8('unknown') // TODO: replace with correct block name
+          .array('ed25519_public_key', ED25519_PUBLIC_KEY_LENGTH, 'word8')
+          .array('ed25519_signature', ED25519_SIGNATURE_LENGTH, 'word8');
+        break;
+      case 1: 
+        data
+          .word8('signature_type')
+          .array('data', 2, 'word8') // TODO: replace with correct block name
+        break;
+      default:
+        throw new Error('packable error: ' + 'Invalid variant');
+        // TODO: return the error
+    }
+    return data;
   }
 
   async _getAppConfig() {
@@ -303,3 +402,5 @@ class Iota {
 }
 
 export default Iota;
+
+export { TIMEOUT_CMD_NON_USER_INTERACTION, Commands }
