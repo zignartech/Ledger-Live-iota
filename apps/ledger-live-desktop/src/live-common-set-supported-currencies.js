@@ -51,4 +51,5 @@ setSupportedCurrencies([
   "moonbeam",
   "songbird",
   "flare",
+  "iota",
 ]);
