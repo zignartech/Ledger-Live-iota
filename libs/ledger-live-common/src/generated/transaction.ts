@@ -14,6 +14,7 @@ import neo from "../families/neo/transaction";
 import osmosis from "../families/osmosis/transaction";
 import polkadot from "../families/polkadot/transaction";
 import ripple from "../families/ripple/transaction";
+import shimmer from "../families/shimmer/transaction";
 import solana from "../families/solana/transaction";
 import stellar from "../families/stellar/transaction";
 import tezos from "../families/tezos/transaction";
@@ -36,6 +37,7 @@ export default {
   osmosis,
   polkadot,
   ripple,
+  shimmer,
   solana,
   stellar,
   tezos,

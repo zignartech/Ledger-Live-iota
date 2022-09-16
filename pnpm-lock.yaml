@@ -915,6 +915,7 @@ importers:
       '@hashgraph/sdk': ^2.10.1
       '@iota/checksum': ^1.0.0-beta.30
       '@iota/core': ^1.0.0-beta.30
+      '@iota/iota.js': ^1.8.6
       '@keplr-wallet/cosmos': ^0.9.16
       '@keplr-wallet/proto-types': ^0.10.4
       '@ledgerhq/compressjs': github:LedgerHQ/compressjs#d9e8e4d994923e0ea76a32b97289bcccfe71b82e
@@ -933,7 +934,6 @@ importers:
       '@ledgerhq/hw-app-xrp': workspace:^
       '@ledgerhq/hw-transport': workspace:^
       '@ledgerhq/hw-transport-mocker': workspace:^
-      '@ledgerhq/hw-transport-node-hid': workspace
       '@ledgerhq/hw-transport-node-speculos': workspace:^
       '@ledgerhq/json-bignumber': ^1.1.0
       '@ledgerhq/live-app-sdk': ^0.8.1
@@ -1099,6 +1099,7 @@ importers:
       '@ethereumjs/tx': 3.5.1
       '@ethersproject/shims': 5.7.0
       '@hashgraph/sdk': 2.14.2
+      '@iota/iota.js': 1.8.6
       '@keplr-wallet/cosmos': 0.9.16
       '@ledgerhq/compressjs': github.com/LedgerHQ/compressjs/d9e8e4d994923e0ea76a32b97289bcccfe71b82e
       '@ledgerhq/cryptoassets': link:../ledgerjs/packages/cryptoassets
@@ -1116,7 +1117,6 @@ importers:
       '@ledgerhq/hw-app-xrp': link:../ledgerjs/packages/hw-app-xrp
       '@ledgerhq/hw-transport': link:../ledgerjs/packages/hw-transport
       '@ledgerhq/hw-transport-mocker': link:../ledgerjs/packages/hw-transport-mocker
-      '@ledgerhq/hw-transport-node-hid': link:../ledgerjs/packages/hw-transport-node-hid
       '@ledgerhq/hw-transport-node-speculos': link:../ledgerjs/packages/hw-transport-node-speculos
       '@ledgerhq/json-bignumber': 1.1.0
       '@ledgerhq/live-app-sdk': 0.8.1
@@ -10430,6 +10430,14 @@ packages:
       - encoding
     dev: true
 
+  /@iota/crypto.js/1.8.6:
+    resolution: {integrity: sha512-bmsBL+gEJVlT1KgkOqjIkPsyNs5VV9MyrAWo9UAYdGNxfyH+KeYiiRzIaQwwhCzUkncuNzlCTbEo2qRJQoKETg==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@iota/util.js': 1.8.6
+      big-integer: 1.6.51
+    dev: false
+
   /@iota/curl/1.0.0-beta.19:
     resolution: {integrity: sha512-bUr6VW8lP1XYhAkzUacc8U28qO2Ibdl6R5CSF7N34GgjO2sEkn4DnlzL1VU8cCv+8rfBlZ9qIvYGzklic49JJw==}
     dev: true
@@ -10443,6 +10451,18 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: true
+
+  /@iota/iota.js/1.8.6:
+    resolution: {integrity: sha512-KkUgYS+bde2v5ThjQsVWOECdRH1ym0atUod6TPk9YR05xNpVFq/kt4N/QBKqYv0ysLCL/EjR6mVZCrc5mE6CHA==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@iota/crypto.js': 1.8.6
+      '@iota/util.js': 1.8.6
+      big-integer: 1.6.51
+      node-fetch: 2.6.7
+    transitivePeerDependencies:
+      - encoding
+    dev: false
 
   /@iota/kerl/1.0.0-beta.30:
     resolution: {integrity: sha512-vVx7916Sb1fZWV9FmsFUUoxrgBbxeK4lc2Y0NYIw4OnU/Q6NsTu+GEXGNMArp97daU4UQhbceE7DNTj9HOICfQ==}
@@ -10482,6 +10502,13 @@ packages:
       '@types/warning': 3.0.0
       warning: 4.0.3
     dev: true
+
+  /@iota/util.js/1.8.6:
+    resolution: {integrity: sha512-vQRYU0bDKORGFzeoN2zn7tO4Kjqv+h2P/J//MRspg9Kyy1TKgtGkn0j0M2ZSwJjScH6Cn2BQmRLet/ZBpg6osA==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      big-integer: 1.6.51
+    dev: false
 
   /@iov/crypto/2.1.0:
     resolution: {integrity: sha512-jnb4XuK50admolm7fBxOcxfAW2TO+wYrZlhDWiMETItY/Y5gNNa1zaDSO2wNIjjfGng+8nQ1yqnNhqy7busV2Q==}

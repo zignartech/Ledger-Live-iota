@@ -2489,6 +2489,30 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
     ],
     explorerViews: [],
   },
+  shimmer: {
+    type: "CryptoCurrency",
+    id: "shimmer",
+    coinType: 4218,
+    name: "Shimmer",
+    managerAppName: "Shimmer",
+    ticker: "SMR",
+    scheme: "shimmer",
+    color: "#000000",
+    family: "shimmer",
+    units: [
+      {
+        name: "SMR",
+        code: "SMR",
+        magnitude: 8,
+      },
+    ],
+    explorerViews: [
+      {
+        address: "https://explorer.shimmer.network/mainnet/addr/$address",
+        tx: "https://explorer.shimmer.network/mainnet/message/$hash",
+      }
+    ],
+  },
   solana: {
     type: "CryptoCurrency",
     id: "solana",
