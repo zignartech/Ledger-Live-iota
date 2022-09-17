@@ -5,7 +5,7 @@ import { getErrorMessage } from './error';
 import Transport from '@ledgerhq/hw-transport';
 import { _0Xbtc } from '../../../data/icons/react';
 import { log } from "@ledgerhq/logs";
-import { u8 } from '@polkadot/types';
+import { CryptoCurrency } from '@ledgerhq/types-cryptoassets';
 
 /**
  * IOTA API
@@ -62,9 +62,8 @@ const Flows = {
  */
 class Iota {
   transport: Transport;
-  constructor(transport) {
-    transport.decorateAppAPIMethods(this, ['getAppVersion'], 'IOTA');
-
+  constructor(transport: Transport) {
+    transport.decorateAppAPIMethods(this, ["getAppVersion", "getAddres"], "IOTA");
     this.transport = transport;
   }
 
@@ -92,16 +91,15 @@ class Iota {
    **/
   async getAddress(
     path: string, 
-    currency, 
+    currency: CryptoCurrency, 
     options: AddressOptions = {
       display: false, 
       prefix: currency.units[0].name.toLowerCase()
-    }){
+    }): Promise<string>{
     const pathArray = Iota._validatePath(path);
 
-    await this._setAccount(pathArray[2]);
+    await this._setAccount(pathArray[2], currency);
     await this._generateAddress(pathArray[3], pathArray[4], 1, options.display);
-
     const addressData = await this._getData();
     return bech32.encode(options.prefix, bech32.toWords(addressData));
   }
@@ -123,15 +121,27 @@ class Iota {
     return pathArray;
   }
 
-  async _setAccount(account: any): Promise<void> {
+  async _setAccount(account: any, currency: CryptoCurrency): Promise<void> {
     const setAccountInStruct = Struct().word32Ule('account') as any;
 
     setAccountInStruct.allocate();
     setAccountInStruct.fields.account = account;
 
+    let app_mode: number;
+    switch (currency.id) {
+      case "iota":
+        app_mode = 0x01;
+        break;
+      case "shimmer":
+        app_mode = 0x03;
+        break;
+      default:
+        throw new Error('packable error: ' + 'IncorrectP1P2');
+    }
+
     await this._sendCommand(
       Commands.INS_SET_ACCOUNT,
-      0,
+      app_mode,
       0,
       setAccountInStruct.buffer(),
       TIMEOUT_CMD_NON_USER_INTERACTION
