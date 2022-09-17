@@ -349,8 +349,7 @@ class Iota {
       case 1: 
         data
           .word8('signature_type')
-          .array('data', 2, 'word8') // TODO: replace with correct block name
-        break;
+          .array('reference', 2, 'word8')
       default:
         throw new Error('packable error: ' + 'Invalid variant');
         // TODO: return the error

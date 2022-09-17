@@ -29,6 +29,7 @@ importers:
     specifiers:
       '@changesets/changelog-github': ^0.4.6
       '@changesets/cli': ^2.24.3
+      '@types/struct': 0.0.3
       create-release-hash: workspace:*
       migrate-branch: workspace:*
       pnpm-utils: workspace:*
@@ -38,6 +39,7 @@ importers:
     devDependencies:
       '@changesets/changelog-github': 0.4.6
       '@changesets/cli': 2.24.3
+      '@types/struct': 0.0.3
       create-release-hash: link:tools/create-release-hash
       migrate-branch: link:tools/migrate-branch
       pnpm-utils: link:tools/pnpm-utils
@@ -913,6 +915,8 @@ importers:
       '@ethereumjs/tx': ^3.5.0
       '@ethersproject/shims': ^5.7.0
       '@hashgraph/sdk': ^2.10.1
+      '@iota/checksum': ^1.0.0-beta.30
+      '@iota/core': ^1.0.0-beta.30
       '@iota/crypto.js': ^1.8.6
       '@iota/iota.js': ^1.8.6
       '@iota/util.js': ^1.8.6
@@ -1211,6 +1215,8 @@ importers:
       xstate: 4.32.0
       zcash-bitcore-lib: 0.13.20-rc3
     devDependencies:
+      '@iota/checksum': 1.0.0-beta.30
+      '@iota/core': 1.0.0-beta.30
       '@keplr-wallet/proto-types': 0.10.4
       '@ledgerhq/types-cryptoassets': link:../ledgerjs/packages/types-cryptoassets
       '@ledgerhq/types-devices': link:../ledgerjs/packages/types-devices
@@ -10375,6 +10381,59 @@ packages:
     engines: {node: '>=6.9.0'}
     dev: true
 
+  /@iota/bundle-validator/1.0.0-beta.30:
+    resolution: {integrity: sha512-LYMms75LCZZ8yTIL1ApQrpuwzD4VfFeTOJVICyjObClIbAL0QGraq0HgdeJiaYjvRqNKrdi9JYM3QdZJvGcsAw==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/kerl': 1.0.0-beta.30
+      '@iota/signing': 1.0.0-beta.30
+      '@iota/transaction': 1.0.0-beta.30
+      '@iota/transaction-converter': 1.0.0-beta.30
+    dev: true
+
+  /@iota/bundle/1.0.0-beta.30:
+    resolution: {integrity: sha512-JIPaSHCqfJa2Oq5zD19ie2CYAitNXp4DJcV9oJU/yDVJoKqlLs9BCdNgf/fAI4ZViFkKx3L4F+z0R6G/vO7Kcw==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/kerl': 1.0.0-beta.30
+      '@iota/signing': 1.0.0-beta.30
+      '@iota/transaction': 1.0.0-beta.30
+      '@types/warning': 3.0.0
+      warning: 4.0.3
+    dev: true
+
+  /@iota/checksum/1.0.0-beta.30:
+    resolution: {integrity: sha512-oNCtmJjb152J/+Y5ddF+iBo0S0L7hDHZZHTRXovvcJeRniAZ6IF45Ko0qo/6SiNUEhUaQeJ/oj+kMdkfTdQ51A==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/kerl': 1.0.0-beta.30
+    dev: true
+
+  /@iota/converter/1.0.0-beta.30:
+    resolution: {integrity: sha512-DxyTXatWZiVb2EKN1JVdaZs1zg8JUCHngk94hK2quV7JM3weemLOKd6OL8GQOJtjjoGIWBIZFpKpYZd2gaIBmg==}
+    dependencies:
+      core-js: 3.22.5
+    dev: true
+
+  /@iota/core/1.0.0-beta.30:
+    resolution: {integrity: sha512-BYnQnTY2lOAOz4LEPT2jDKb9z25EeU0lUVE4vO6mV+rcVlkn8NDUkOvJpEi9XWdPySx6MqtcSiVMvGcAAGh4Tw==}
+    dependencies:
+      '@iota/bundle': 1.0.0-beta.30
+      '@iota/bundle-validator': 1.0.0-beta.30
+      '@iota/checksum': 1.0.0-beta.30
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/curl': 1.0.0-beta.19
+      '@iota/http-client': 1.0.0-beta.30
+      '@iota/kerl': 1.0.0-beta.30
+      '@iota/pad': 1.0.0-beta.30
+      '@iota/signing': 1.0.0-beta.30
+      '@iota/transaction': 1.0.0-beta.30
+      '@iota/transaction-converter': 1.0.0-beta.30
+      bluebird: 3.7.2
+    transitivePeerDependencies:
+      - encoding
+    dev: true
+
   /@iota/crypto.js/1.8.6:
     resolution: {integrity: sha512-bmsBL+gEJVlT1KgkOqjIkPsyNs5VV9MyrAWo9UAYdGNxfyH+KeYiiRzIaQwwhCzUkncuNzlCTbEo2qRJQoKETg==}
     engines: {node: '>=14.0.0'}
@@ -10382,6 +10441,20 @@ packages:
       '@iota/util.js': 1.8.6
       big-integer: 1.6.51
     dev: false
+
+  /@iota/curl/1.0.0-beta.19:
+    resolution: {integrity: sha512-bUr6VW8lP1XYhAkzUacc8U28qO2Ibdl6R5CSF7N34GgjO2sEkn4DnlzL1VU8cCv+8rfBlZ9qIvYGzklic49JJw==}
+    dev: true
+
+  /@iota/http-client/1.0.0-beta.30:
+    resolution: {integrity: sha512-Dc4UnNmO5mgPi6pZOwgJ7wR9/ETJoSlU/C0HlSIdkzeuRchpRc70STG2pA8hfIfLnNQE2N8HzMvceSPntKlWZg==}
+    dependencies:
+      bluebird: 3.7.2
+      cross-fetch: 3.1.5
+      url-parse: 1.5.10
+    transitivePeerDependencies:
+      - encoding
+    dev: true
 
   /@iota/iota.js/1.8.6:
     resolution: {integrity: sha512-KkUgYS+bde2v5ThjQsVWOECdRH1ym0atUod6TPk9YR05xNpVFq/kt4N/QBKqYv0ysLCL/EjR6mVZCrc5mE6CHA==}
@@ -10394,6 +10467,45 @@ packages:
     transitivePeerDependencies:
       - encoding
     dev: false
+
+  /@iota/kerl/1.0.0-beta.30:
+    resolution: {integrity: sha512-vVx7916Sb1fZWV9FmsFUUoxrgBbxeK4lc2Y0NYIw4OnU/Q6NsTu+GEXGNMArp97daU4UQhbceE7DNTj9HOICfQ==}
+    dependencies:
+      '@types/crypto-js': 3.1.47
+      crypto-js: 4.1.1
+    dev: true
+
+  /@iota/pad/1.0.0-beta.30:
+    resolution: {integrity: sha512-fnhPMPul18WunLq9Ni4rxzBFmhna6eaG8WroDg6GdQqSK/eN62uFHV8tpspJHXuCqwgCUVp6NpuUna7+B2OV9g==}
+    dev: true
+
+  /@iota/signing/1.0.0-beta.30:
+    resolution: {integrity: sha512-VnOCBq8uAsMwQKv7VeYe2Yx2hTWxNp/lkNEqN6xgPsTII17elj0wjwR+b4euf48h3nIiGeCLWRK5a+k9r46o/g==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/kerl': 1.0.0-beta.30
+      '@iota/pad': 1.0.0-beta.30
+      bluebird: 3.7.2
+    dev: true
+
+  /@iota/transaction-converter/1.0.0-beta.30:
+    resolution: {integrity: sha512-V27JhRRuJLR8h2XgQBNRC0i3YMU2VVKXwXoB4vxofEdjb0zrXk3Wya7en7PFJUrhtG2edmFXELTaGrN2zw372Q==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/pad': 1.0.0-beta.30
+      '@iota/transaction': 1.0.0-beta.30
+    dev: true
+
+  /@iota/transaction/1.0.0-beta.30:
+    resolution: {integrity: sha512-Y84Jaba9lXMbi/yDJSIgKE8gyY0P63ILACjiPqoPOrHnOQQ9Hs0ewh55/lhat0kZODDGWsaEzKrN4CawOICofg==}
+    dependencies:
+      '@iota/converter': 1.0.0-beta.30
+      '@iota/curl': 1.0.0-beta.19
+      '@iota/kerl': 1.0.0-beta.30
+      '@iota/signing': 1.0.0-beta.30
+      '@types/warning': 3.0.0
+      warning: 4.0.3
+    dev: true
 
   /@iota/util.js/1.8.6:
     resolution: {integrity: sha512-vQRYU0bDKORGFzeoN2zn7tO4Kjqv+h2P/J//MRspg9Kyy1TKgtGkn0j0M2ZSwJjScH6Cn2BQmRLet/ZBpg6osA==}
@@ -18339,6 +18451,10 @@ packages:
     resolution: {integrity: sha512-lIxCk6G7AwmUagQ4gIQGxUBnvAq664prFD9nSAz6dgd1XmBXBtZABV/op+QsJsIyaP1GZsf/iXhYKHX3azSRCw==}
     dev: false
 
+  /@types/crypto-js/3.1.47:
+    resolution: {integrity: sha512-eI6gvpcGHLk3dAuHYnRCAjX+41gMv1nz/VP55wAe5HtmAKDOoPSfr3f6vkMc08ov1S0NsjvUBxDtHHxqQY1LGA==}
+    dev: true
+
   /@types/d3-path/3.0.0:
     resolution: {integrity: sha512-0g/A+mZXgFkQxN3HniRDbXMN79K3CdTpLsevj+PXiTcb2hVyvkZUBg37StmgCQkaD84cUJ4uaDAWq7UJOQy2Tg==}
     dev: true
@@ -19059,6 +19175,12 @@ packages:
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
 
+  /@types/struct/0.0.3:
+    resolution: {integrity: sha512-Sqs3Dv95exdr8R/DrcszIdR/BazkPHCyhYvZpQgiWv3l477kV5ghiubNpXysAIOBEmK41bMOjj7cStMQ+YGfyQ==}
+    dependencies:
+      '@types/node': 17.0.32
+    dev: true
+
   /@types/styled-components-react-native/5.1.3_@types+react@17.0.45:
     resolution: {integrity: sha512-IXaogtizUkHJNzSxihG4KK3Z+jaHFp4XyHYIh/I7SUHCc1DsBxToQpE33JITPkgP6DzfgeDn9JkGBGhDIy+GIQ==}
     peerDependencies:
@@ -19142,6 +19264,10 @@ packages:
 
   /@types/w3c-web-usb/1.0.6:
     resolution: {integrity: sha512-cSjhgrr8g4KbPnnijAr/KJDNKa/bBa+ixYkywFRvrhvi9n1WEl7yYbtRyzE6jqNQiSxxJxoAW3STaOQwJHndaw==}
+    dev: true
+
+  /@types/warning/3.0.0:
+    resolution: {integrity: sha512-t/Tvs5qR47OLOr+4E9ckN8AmP2Tf16gWq+/qA4iUGS/OOyHVO8wv2vjJuX8SNOUTJyWb+2t7wJm6cXILFnOROA==}
     dev: true
 
   /@types/web-bluetooth/0.0.12:
@@ -25464,7 +25590,6 @@ packages:
 
   /crypto-js/4.1.1:
     resolution: {integrity: sha512-o2JlM7ydqd3Qk9CA0L4NL6mTzU2sdx96a+oOfPu8Mkl/PK51vSyoi8/rQ8NknZtk44vq15lmhAj9CIAGwgeWKw==}
-    dev: false
 
   /crypto-random-string/1.0.0:
     resolution: {integrity: sha1-ojD2T1aDEOFJgAmUB5DsmVRbyn4=}
