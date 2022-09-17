@@ -73,7 +73,7 @@ class Iota {
    *
    * @returns {Promise<String>} Semantic Version string (i.e. MAJOR.MINOR.PATCH)
    **/
-  async getAppVersion() {
+  async getAppVersion(): Promise<string> {
     const config = await this._getAppConfig();
     return config.app_version;
   }
@@ -91,7 +91,7 @@ class Iota {
    * iota.getAddress(0, { prefix: 'atoi' });
    **/
   async getAddress(
-    path, 
+    path: string, 
     currency, 
     options: AddressOptions = {
       display: false, 
@@ -108,8 +108,8 @@ class Iota {
 
   ///////// Private methods should not be called directly! /////////
 
-  static _validatePath(path) {
-    let pathArray;
+  static _validatePath(path: string): string | any[] {
+    let pathArray: string | any[];
     try {
       pathArray = bippath.fromString(path).toPathArray();
     } catch (e: any) {
@@ -123,8 +123,8 @@ class Iota {
     return pathArray;
   }
 
-  async _setAccount(account) {
-    const setAccountInStruct = new Struct().word32Ule('account');
+  async _setAccount(account: any): Promise<void> {
+    const setAccountInStruct = Struct().word32Ule('account') as any;
 
     setAccountInStruct.allocate();
     setAccountInStruct.fields.account = account;
@@ -138,7 +138,7 @@ class Iota {
     );
   }
 
-  async _getDataBufferState() {
+  async _getDataBufferState(): Promise<{ data_length: number; data_type: any; data_block_size: number; data_block_count: any; }> {
     const response = await this._sendCommand(
       Commands.INS_GET_DATA_BUFFER_STATE,
       0,
@@ -147,23 +147,23 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
 
-    const getDataBufferStateOutStruct = new Struct()
+    const getDataBufferStateOutStruct = Struct()
       .word16Ule('data_length')
       .word8('data_type')
       .word8('data_block_size')
-      .word8('data_block_count');
+      .word8('data_block_count') as any;
     getDataBufferStateOutStruct.setBuffer(response);
 
     const fields = getDataBufferStateOutStruct.fields;
     return {
-      data_length: fields.data_length,
+      data_length: fields.data_length as number,
       data_type: fields.data_type,
-      data_block_size: fields.data_block_size,
+      data_block_size: fields.data_block_size as number,
       data_block_count: fields.data_block_count,
     };
   }
 
-  async _readDataBlock(block, size) {
+  async _readDataBlock({ block, size }: { block: number; size: number; }): Promise<Uint8Array> {
     const response = await this._sendCommand(
       Commands.INS_READ_DATA_BLOCK,
       block,
@@ -172,7 +172,7 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
 
-    const readDataBlockOutStruct = new Struct().array('data', size, 'word8');
+    const readDataBlockOutStruct = Struct().array('data', size, 'word8') as any;
     readDataBlockOutStruct.setBuffer(response);
     const fields = readDataBlockOutStruct.fields;
 
@@ -183,7 +183,7 @@ class Iota {
     return data;
   }
 
-  async _writeDataBlock(blockNr, data) {
+  async _writeDataBlock(blockNr: any, data: any): Promise<void> {
     await this._sendCommand(
       Commands.INS_PREPARE_SIGNING,
       blockNr,
@@ -193,7 +193,7 @@ class Iota {
     );
   }
 
-  async _getData() {
+  async _getData(): Promise<Uint8Array> {
     const state = await this._getDataBufferState();
 
     const blocks = Math.ceil(state.data_length / state.data_block_size);
@@ -201,14 +201,14 @@ class Iota {
 
     let offset = 0;
     for (let i = 0; i < blocks; i++) {
-      const block = await this._readDataBlock(i, state.data_block_size);
+      const block = await this._readDataBlock({ block: i, size: state.data_block_size });
       data.set(block, offset);
       offset += block.length;
     }
     return data.subarray(0, state.data_length);
   }
 
-  async _showMainFlow() {
+  async _showMainFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowMainMenu,
@@ -218,7 +218,7 @@ class Iota {
     );
   }
 
-  async _showGeneratingAddressesFlow() {
+  async _showGeneratingAddressesFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowGeneratingAddresses,
@@ -228,7 +228,7 @@ class Iota {
     );
   }
 
-  async _showGenericErrorFlow() {
+  async _showGenericErrorFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowGenericError,
@@ -238,7 +238,7 @@ class Iota {
     );
   }
 
-  async _showRejectedFlow() {
+  async _showRejectedFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowRejected,
@@ -248,7 +248,7 @@ class Iota {
     );
   }
 
-  async _showSignedSuccessfullyFlow() {
+  async _showSignedSuccessfullyFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowSignedSuccessfully,
@@ -258,7 +258,7 @@ class Iota {
     );
   }
 
-  async _showSigningFlow() {
+  async _showSigningFlow(): Promise<void> {
     await this._sendCommand(
       Commands.INS_SHOW_FLOW,
       Flows.FlowSigning,
@@ -268,11 +268,11 @@ class Iota {
     );
   }
 
-  async _prepareSigning(ramainderIdx, bip32Idx, bip32Change, p2) {
-    const prepareSigningInStruct = new Struct()
+  async _prepareSigning(ramainderIdx: any, bip32Idx: any, bip32Change: any, p2: any): Promise<void> {
+    const prepareSigningInStruct = Struct()
       .word32Ule('remainder_index')
       .word32Ule('remainder_bip32_index')
-      .word32Ule('remainder_bip32_change');
+      .word32Ule('remainder_bip32_change') as any;
 
       prepareSigningInStruct.allocate();
       prepareSigningInStruct.fields.bip32_index = ramainderIdx;
@@ -288,11 +288,11 @@ class Iota {
     );
   }
 
-  async _generateAddress(change, index, count, display = false) {
-    const generateAddressInStruct = new Struct()
+  async _generateAddress(change: any, index: any, count: number, display = false): Promise<void> {
+    const generateAddressInStruct = Struct()
       .word32Ule('bip32_index')
       .word32Ule('bip32_change')
-      .word32Ule('count');
+      .word32Ule('count') as any;
 
     generateAddressInStruct.allocate();
     generateAddressInStruct.fields.bip32_index = index;
@@ -308,7 +308,7 @@ class Iota {
     );
   }
 
-  async _userConfirmEssence() {
+  async _userConfirmEssence(): Promise<void> {
     this._sendCommand(
       Commands.INS_USER_CONFIRM_ESSENCE,
       0,
@@ -318,7 +318,7 @@ class Iota {
     );
   }
 
-  async _signSingle(index) {
+  async _signSingle(index: any): Promise<any> {
     const response = await this._sendCommand(
       Commands.INS_SIGN_SINGLE,
       index,
@@ -327,7 +327,7 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
     const signatureType = response.at(0);
-    let data = new Struct();
+    let data = Struct();
     switch (signatureType) {
       case 0:
         data
@@ -348,7 +348,7 @@ class Iota {
     return data;
   }
 
-  async _getAppConfig() {
+  async _getAppConfig(): Promise<{ app_version: string; app_flags: any; device: any; debug: any; }> {
     const response = await this._sendCommand(
       Commands.INS_GET_APP_CONFIG,
       0,
@@ -357,13 +357,13 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
 
-    const getAppConfigOutStruct = new Struct()
+    const getAppConfigOutStruct = Struct()
       .word8('app_version_major')
       .word8('app_version_minor')
       .word8('app_version_patch')
       .word8('app_flags')
       .word8('device')
-      .word8('debug');
+      .word8('debug') as any;
     getAppConfigOutStruct.setBuffer(response);
 
     const fields = getAppConfigOutStruct.fields;
@@ -380,7 +380,7 @@ class Iota {
     };
   }
 
-  async _reset(partial = false) {
+  async _reset(partial = false): Promise<void> {
     await this._sendCommand(
       Commands.INS_RESET,
       partial ? 1 : 0,
@@ -390,7 +390,7 @@ class Iota {
     );
   }
 
-  async _sendCommand(ins, p1, p2, data, timeout) {
+  async _sendCommand(ins: number, p1: number, p2: number, data: undefined, timeout: number): Promise<any> {
     const transport = this.transport;
     try {
       transport.setExchangeTimeout(timeout);
