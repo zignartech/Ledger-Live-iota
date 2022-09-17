@@ -239,6 +239,8 @@
   "devDependencies": {
     "chai": "^4.3.4",
     "chai-as-promised": "^7.1.1",
+    "@iota/checksum": "^1.0.0-beta.30",
+    "@iota/core": "^1.0.0-beta.30",
     "@keplr-wallet/proto-types": "^0.10.4",
     "@ledgerhq/hw-transport-mocker": "^6.0.2",
     "@ledgerhq/types-cryptoassets": "workspace:^",
