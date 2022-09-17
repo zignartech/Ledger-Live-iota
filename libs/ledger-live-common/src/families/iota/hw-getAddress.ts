@@ -2,10 +2,10 @@ import Iota from "./hw-app-iota";
 import { log } from "@ledgerhq/logs";
 import type { Resolver } from "../../hw/getAddress/types";
 
-const resolver: Resolver = async (transport, { path }) => {
+const resolver: Resolver = async (transport, { path, currency }) => {
   const iota = new Iota(transport);
 
-  const r = await iota.getAddress("44'/1'/0'/0'/0'", { prefix: 'iota' });
+  const r = await iota.getAddress(path, currency); //{ prefix: 'atoi' }
   return {
     path,
     address: r,

@@ -12,6 +12,11 @@ import { u8 } from '@polkadot/types';
  * @module hw-app-iota
  */
 
+ interface AddressOptions {
+  prefix: string;
+  display: boolean;
+}
+
 const CLA = 0x7b;
 const Commands = {
   INS_NO_OPERATION: 0x00,
@@ -58,7 +63,7 @@ const Flows = {
 class Iota {
   transport: Transport;
   constructor(transport) {
-    transport.decorateAppAPIMethods(this, ['getAppVersion'], 'IOT');
+    transport.decorateAppAPIMethods(this, ['getAppVersion'], 'IOTA');
 
     this.transport = transport;
   }
@@ -85,17 +90,20 @@ class Iota {
    * @example
    * iota.getAddress(0, { prefix: 'atoi' });
    **/
-  async getAddress(path, options) {
+  async getAddress(
+    path, 
+    currency, 
+    options: AddressOptions = {
+      display: false, 
+      prefix: currency.units[0].name.toLowerCase()
+    }){
     const pathArray = Iota._validatePath(path);
 
-    const display = options.display || false;
-    const prefix = options.prefix || 'iota';
-
     await this._setAccount(pathArray[2]);
-    await this._generateAddress(pathArray[3], pathArray[4], 1, display);
+    await this._generateAddress(pathArray[3], pathArray[4], 1, options.display);
 
     const addressData = await this._getData();
-    return bech32.encode(prefix, bech32.toWords(addressData));
+    return bech32.encode(options.prefix, bech32.toWords(addressData));
   }
 
   ///////// Private methods should not be called directly! /////////

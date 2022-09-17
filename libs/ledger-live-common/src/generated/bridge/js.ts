@@ -14,7 +14,6 @@ import neo from "../../families/neo/bridge/js";
 import osmosis from "../../families/osmosis/bridge/js";
 import polkadot from "../../families/polkadot/bridge/js";
 import ripple from "../../families/ripple/bridge/js";
-import shimmer from "../../families/shimmer/bridge/js";
 import solana from "../../families/solana/bridge/js";
 import stellar from "../../families/stellar/bridge/js";
 import tezos from "../../families/tezos/bridge/js";
@@ -37,7 +36,6 @@ export default {
   osmosis,
   polkadot,
   ripple,
-  shimmer,
   solana,
   stellar,
   tezos,

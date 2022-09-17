@@ -62,10 +62,6 @@ import { Transaction as rippleTransaction } from "../families/ripple/types";
 import { TransactionRaw as rippleTransactionRaw } from "../families/ripple/types";
 import { TransactionStatus as rippleTransactionStatus } from "../families/ripple/types";
 import { TransactionStatusRaw as rippleTransactionStatusRaw } from "../families/ripple/types";
-import { Transaction as shimmerTransaction } from "../families/shimmer/types";
-import { TransactionRaw as shimmerTransactionRaw } from "../families/shimmer/types";
-import { TransactionStatus as shimmerTransactionStatus } from "../families/shimmer/types";
-import { TransactionStatusRaw as shimmerTransactionStatusRaw } from "../families/shimmer/types";
 import { Transaction as solanaTransaction } from "../families/solana/types";
 import { TransactionRaw as solanaTransactionRaw } from "../families/solana/types";
 import { TransactionStatus as solanaTransactionStatus } from "../families/solana/types";
@@ -100,7 +96,6 @@ export type Transaction =
   | osmosisTransaction
   | polkadotTransaction
   | rippleTransaction
-  | shimmerTransaction
   | solanaTransaction
   | stellarTransaction
   | tezosTransaction
@@ -123,7 +118,6 @@ export type TransactionRaw =
   | osmosisTransactionRaw
   | polkadotTransactionRaw
   | rippleTransactionRaw
-  | shimmerTransactionRaw
   | solanaTransactionRaw
   | stellarTransactionRaw
   | tezosTransactionRaw
@@ -146,7 +140,6 @@ export type TransactionStatus =
   | osmosisTransactionStatus
   | polkadotTransactionStatus
   | rippleTransactionStatus
-  | shimmerTransactionStatus
   | solanaTransactionStatus
   | stellarTransactionStatus
   | tezosTransactionStatus
@@ -169,7 +162,6 @@ export type TransactionStatusRaw =
   | osmosisTransactionStatusRaw
   | polkadotTransactionStatusRaw
   | rippleTransactionStatusRaw
-  | shimmerTransactionStatusRaw
   | solanaTransactionStatusRaw
   | stellarTransactionStatusRaw
   | tezosTransactionStatusRaw

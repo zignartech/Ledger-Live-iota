@@ -2498,7 +2498,7 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
     ticker: "SMR",
     scheme: "shimmer",
     color: "#000000",
-    family: "shimmer",
+    family: "iota",
     units: [
       {
         name: "SMR",

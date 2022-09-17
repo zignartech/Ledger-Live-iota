@@ -14,7 +14,6 @@ import neo from "../families/neo/hw-getAddress";
 import osmosis from "../families/osmosis/hw-getAddress";
 import polkadot from "../families/polkadot/hw-getAddress";
 import ripple from "../families/ripple/hw-getAddress";
-import shimmer from "../families/shimmer/hw-getAddress";
 import solana from "../families/solana/hw-getAddress";
 import stellar from "../families/stellar/hw-getAddress";
 import tezos from "../families/tezos/hw-getAddress";
@@ -37,7 +36,6 @@ export default {
   osmosis,
   polkadot,
   ripple,
-  shimmer,
   solana,
   stellar,
   tezos,
