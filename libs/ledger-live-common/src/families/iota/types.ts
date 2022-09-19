@@ -16,7 +16,7 @@ export type Transaction = TransactionCommon & {
 export type TransactionRaw = TransactionCommonRaw & {
   family: "iota";
   amount: string;
-  useAllAmount?: string;
+  useAllAmount?: boolean;
   recipient: string;
 };
 export type TransactionStatus = TransactionStatusCommon;

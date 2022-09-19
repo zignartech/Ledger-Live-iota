@@ -1,4 +1,5 @@
 import { Bip32Path } from "@iota/crypto.js";
+import type { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import {
     Bech32Helper,
     Ed25519Address,
@@ -28,6 +29,8 @@ import {
   RecordStore,
   openTransportReplayer,
 } from '@ledgerhq/hw-transport-mocker';
+import { Account, AccountRaw } from "@ledgerhq/types-live";
+import BigNumber from "bignumber.js";
 
 const API_ENDPOINT = "https://api.lb-0.h.chrysalis-devnet.iota.cafe";
 
@@ -42,6 +45,24 @@ const EXPECTED_RESULTS = {
   version: '0.5.0',
   maxBundleSize: 8,
 };
+
+const accountRaw: AccountRaw = {
+  id: `js:2:iota:ADDR:`,
+  seedIdentifier: "",
+  name: "Iota 1",
+  derivationMode: "",
+  index: 0,
+  freshAddress: "",
+  freshAddressPath: "44'/354'/0'/0/0'",
+  freshAddresses: [],
+  blockHeight: 0,
+  operations: [],
+  pendingOperations: [],
+  currencyId: "iota",
+  unitMagnitude: 8,
+  lastSyncDate: "",
+  balance: "2111000",
+}
 
 describe('Iota', function () {
   let transport;
@@ -147,13 +168,50 @@ describe('Iota', function () {
         },
         // Sending remainder back to genesis
         {
-            address: genesisWalletAddressHex,
+            address: genesisWalletAddressHex("as"),
             addressType: ED25519_ADDRESS_TYPE,
             amount: totalGenesis - amountToSend
         }
     ];
-
-    await signOperation(account, deviceId, client, inputs, outputs, {
+    // convert accountRaw to account
+    const account: Account = {
+      ...accountRaw,
+      balance: new BigNumber(accountRaw.balance),
+      type: "Account",
+      currency: { type: "CryptoCurrency", id: "iota" } as CryptoCurrency,
+      unit: {
+        name: "",
+        code: "",
+        magnitude: 0,
+        showAllDigits: undefined,
+        prefixCode: undefined
+      },
+      starred: false,
+      used: false,
+      swapHistory: [],
+      creationDate: new Date(),
+      lastSyncDate: new Date(),
+      operationsCount: 0,
+      pendingOperations: [],
+      operations: [],
+      subAccounts: [],
+      spendableBalance: new BigNumber(0),
+      balanceHistoryCache: { DAY: {balances: [], latestDate: 1}, HOUR: {balances: [], latestDate: 1}, WEEK: {balances: [], latestDate: 1}},
+      nfts: [],
+      blockHeight: 0,
+      derivationMode: "",
+      endpointConfig: "asd",
+      freshAddress: "",
+      freshAddressPath: "",
+      freshAddresses: [],
+      id: "",
+      index: 0,
+      name: "",
+      seedIdentifier: "",
+      syncHash: "",
+      xpub: "",
+    };
+    signOperation(account, "", client, inputs, outputs, {
         key: Converter.utf8ToBytes("WALLET"),
         data: Converter.utf8ToBytes("Not trinity")
     });
@@ -163,7 +221,7 @@ describe('Iota', function () {
 });
 
 function genesisWalletAddressHex(genesisWalletAddressHex: any) {
-  throw new Error("Function not implemented.");
+  return "genesisWalletAddressHex";
 }
 
 
