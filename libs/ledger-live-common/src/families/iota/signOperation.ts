@@ -86,9 +86,7 @@ async function buildOptimisticOperation({
 export async function buildTransactionPayload(
     account: Account,
     transport: Transport,
-    inputs: {
-        input: IUTXOInput;
-    }[],
+    inputs: IUTXOInput[],
     outputs: {
         address: string;
         addressType: number;
@@ -163,9 +161,9 @@ export async function buildTransactionPayload(
         serialized: string;
     }[] = inputs.map(i => {
         const writeStream = new WriteStream();
-        serializeInput(writeStream, i.input);
+        serializeInput(writeStream, i);
         return {
-            ...i,
+            ...{ input: i },
             serialized: writeStream.finalHex()
         };
     });
@@ -250,9 +248,7 @@ const signOperation = (
     account: Account,
     deviceId: DeviceId,
     client: IClient | string,
-    inputs: {
-        input: IUTXOInput;
-    }[],
+    inputs: IUTXOInput[],
     outputs: {
         address: string;
         addressType: number;

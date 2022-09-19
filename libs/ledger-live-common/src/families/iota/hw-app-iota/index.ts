@@ -6,6 +6,16 @@ import Transport from '@ledgerhq/hw-transport';
 import { _0Xbtc } from '../../../data/icons/react';
 import { log } from "@ledgerhq/logs";
 import { CryptoCurrency } from '@ledgerhq/types-cryptoassets';
+import {
+  CLA,
+  ADPUInstructions,
+  TIMEOUT_CMD_NON_USER_INTERACTION,
+  TIMEOUT_CMD_USER_INTERACTION,
+  Flows,
+  ED25519_PUBLIC_KEY_LENGTH,
+  ED25519_SIGNATURE_LENGTH,
+  AppModes
+} from './constants';
 
 /**
  * IOTA API
@@ -15,42 +25,6 @@ import { CryptoCurrency } from '@ledgerhq/types-cryptoassets';
  interface AddressOptions {
   prefix: string;
   display: boolean;
-}
-
-const CLA = 0x7b;
-const Commands = {
-  INS_NO_OPERATION: 0x00,
-
-  INS_GET_APP_CONFIG: 0x10,
-  INS_SET_ACCOUNT: 0x11,
-
-  INS_GET_DATA_BUFFER_STATE: 0x80,
-  INS_WRITE_DATA_BLOCK: 0x81,
-  INS_READ_DATA_BLOCK: 0x82,
-  INS_CLEAR_DATA_BUFFER: 0x83,
-
-  INS_SHOW_FLOW: 0x90,
-
-  INS_PREPARE_SIGNING: 0xa0,
-  INS_GEN_ADDRESS: 0xa1,
-  INS_USER_CONFIRM_ESSENCE: 0xa3,
-  INS_SIGN_SINGLE: 0xa4,
-
-  INS_RESET: 0xff,
-};
-const TIMEOUT_CMD_NON_USER_INTERACTION = 10000;
-const TIMEOUT_CMD_USER_INTERACTION = 150000;
-
-const ED25519_PUBLIC_KEY_LENGTH = 32;
-const ED25519_SIGNATURE_LENGTH = 64;
-
-const Flows = {
-  FlowMainMenu: 0,
-  FlowGeneratingAddresses: 1,
-  FlowGenericError: 2,
-  FlowRejected: 3,
-  FlowSignedSuccessfully: 4,
-  FlowSigning: 5,
 }
 
 /**
@@ -130,17 +104,17 @@ class Iota {
     let app_mode: number;
     switch (currency.id) {
       case "iota":
-        app_mode = 0x01;
+        app_mode = AppModes.ModeIOTAStardust;
         break;
       case "shimmer":
-        app_mode = 0x03;
+        app_mode = AppModes.ModeShimmer;
         break;
       default:
         throw new Error('packable error: ' + 'IncorrectP1P2');
     }
 
     await this._sendCommand(
-      Commands.INS_SET_ACCOUNT,
+      ADPUInstructions.INS_SET_ACCOUNT,
       app_mode,
       0,
       setAccountInStruct.buffer(),
@@ -150,7 +124,7 @@ class Iota {
 
   async _getDataBufferState(): Promise<{ data_length: number; data_type: any; data_block_size: number; data_block_count: any; }> {
     const response = await this._sendCommand(
-      Commands.INS_GET_DATA_BUFFER_STATE,
+      ADPUInstructions.INS_GET_DATA_BUFFER_STATE,
       0,
       0,
       undefined,
@@ -175,7 +149,7 @@ class Iota {
 
   async _readDataBlock({ block, size }: { block: number; size: number; }): Promise<Uint8Array> {
     const response = await this._sendCommand(
-      Commands.INS_READ_DATA_BLOCK,
+      ADPUInstructions.INS_READ_DATA_BLOCK,
       block,
       0,
       undefined,
@@ -195,7 +169,7 @@ class Iota {
 
   async _writeDataBlock(blockNr: any, data: any): Promise<void> {
     await this._sendCommand(
-      Commands.INS_PREPARE_SIGNING,
+      ADPUInstructions.INS_PREPARE_SIGNING,
       blockNr,
       0,
       data,
@@ -220,7 +194,7 @@ class Iota {
 
   async _showMainFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowMainMenu,
       0,
       undefined,
@@ -230,7 +204,7 @@ class Iota {
 
   async _showGeneratingAddressesFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowGeneratingAddresses,
       0,
       undefined,
@@ -240,7 +214,7 @@ class Iota {
 
   async _showGenericErrorFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowGenericError,
       0,
       undefined,
@@ -250,7 +224,7 @@ class Iota {
 
   async _showRejectedFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowRejected,
       0,
       undefined,
@@ -260,7 +234,7 @@ class Iota {
 
   async _showSignedSuccessfullyFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowSignedSuccessfully,
       0,
       undefined,
@@ -270,7 +244,7 @@ class Iota {
 
   async _showSigningFlow(): Promise<void> {
     await this._sendCommand(
-      Commands.INS_SHOW_FLOW,
+      ADPUInstructions.INS_SHOW_FLOW,
       Flows.FlowSigning,
       0,
       undefined,
@@ -290,7 +264,7 @@ class Iota {
       prepareSigningInStruct.fields.remainder_bip32_change = bip32Change;
 
     await this._sendCommand(
-      Commands.INS_PREPARE_SIGNING,
+      ADPUInstructions.INS_PREPARE_SIGNING,
       1,
       p2,
       prepareSigningInStruct.buffer(),
@@ -310,7 +284,7 @@ class Iota {
     generateAddressInStruct.fields.count = count;
 
     await this._sendCommand(
-      Commands.INS_GEN_ADDRESS,
+      ADPUInstructions.INS_GEN_ADDRESS,
       display ? 0x01 : 0x00,
       0,
       generateAddressInStruct.buffer(),
@@ -320,7 +294,7 @@ class Iota {
 
   async _userConfirmEssence(): Promise<void> {
     this._sendCommand(
-      Commands.INS_USER_CONFIRM_ESSENCE,
+      ADPUInstructions.INS_USER_CONFIRM_ESSENCE,
       0,
       0,
       undefined,
@@ -330,7 +304,7 @@ class Iota {
 
   async _signSingle(index: any): Promise<any> {
     const response = await this._sendCommand(
-      Commands.INS_SIGN_SINGLE,
+      ADPUInstructions.INS_SIGN_SINGLE,
       index,
       0,
       undefined,
@@ -359,7 +333,7 @@ class Iota {
 
   async _getAppConfig(): Promise<{ app_version: string; app_flags: any; device: any; debug: any; }> {
     const response = await this._sendCommand(
-      Commands.INS_GET_APP_CONFIG,
+      ADPUInstructions.INS_GET_APP_CONFIG,
       0,
       0,
       undefined,
@@ -391,7 +365,7 @@ class Iota {
 
   async _reset(partial = false): Promise<void> {
     await this._sendCommand(
-      Commands.INS_RESET,
+      ADPUInstructions.INS_RESET,
       partial ? 1 : 0,
       0,
       undefined,
@@ -416,4 +390,4 @@ class Iota {
 
 export default Iota;
 
-export { TIMEOUT_CMD_NON_USER_INTERACTION, Commands }
+export { TIMEOUT_CMD_NON_USER_INTERACTION, ADPUInstructions }

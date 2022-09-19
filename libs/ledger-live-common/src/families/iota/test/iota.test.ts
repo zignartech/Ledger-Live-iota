@@ -16,12 +16,13 @@ import {
     UTXO_INPUT_TYPE
 } from "@iota/iota.js";
 import { Converter } from "@iota/util.js";
+import signOperation from "../signOperation";
 import fs from 'fs';
 import path from 'path';
 import { IReferenceUnlockBlock, REFERENCE_UNLOCK_BLOCK_TYPE } from "@iota/iota.js";
 import { ISignatureUnlockBlock, SIGNATURE_UNLOCK_BLOCK_TYPE } from "@iota/iota.js";
 
-import Iota from '../index';
+import Iota from '../hw-app-iota/index';
 
 import {
   RecordStore,
@@ -100,13 +101,6 @@ describe('Iota', function () {
     test("createTransaction", async () => {
       const client = new SingleNodeClient(API_ENDPOINT);
 
-    const nodeInfo = await client.info();
-
-
-    console.log("Genesis");
-
-    const genesisPath = new Bip32Path("m/44'/4218'/0'/0'/0'");
-
 
     // Get the address for the path seed which is actually the Blake2b.sum256 of the public key
     const genesisWalletAddress = iota.getAddress(BIP32_PATH, { prefix: 'atoi' });
@@ -118,28 +112,24 @@ describe('Iota', function () {
     // which calculates all the inputs/outputs for you
     const genesisAddressOutputs = await client.addressEd25519Outputs(genesisWalletAddress);
 
-    const inputsWithKeyPairs: {
-        input: IUTXOInput;
-        addressKeyPair: IKeyPair;
-    }[] = [];
+    const inputs: IUTXOInput[] = [];
 
     let totalGenesis = 0;
 
     for (let i = 0; i < genesisAddressOutputs.outputIds.length; i++) {
         const output = await client.output(genesisAddressOutputs.outputIds[i]);
-        if (!output.isSpent) {
-            inputsWithKeyPairs.push({
-                input: {
-                    type: UTXO_INPUT_TYPE,
-                    transactionId: output.transactionId,
-                    transactionOutputIndex: output.outputIndex
-                },
-                addressKeyPair: genesisWalletKeyPair
-            });
-            if (output.output.type === SIG_LOCKED_SINGLE_OUTPUT_TYPE) {
-                totalGenesis += (output.output as ISigLockedSingleOutput).amount;
+
+        inputs.push(
+            {
+                type: UTXO_INPUT_TYPE,
+                transactionId: output.transactionId,
+                transactionOutputIndex: output.outputIndex
             }
+        );
+        if (output.output.type === SIG_LOCKED_SINGLE_OUTPUT_TYPE) {
+            totalGenesis += (output.output as ISigLockedSingleOutput).amount;
         }
+        
     }
 
     const amountToSend = 10000000;
@@ -163,21 +153,11 @@ describe('Iota', function () {
         }
     ];
 
-    const { messageId } = await sendAdvanced(client, inputsWithKeyPairs, outputs, {
+    await signOperation(account, deviceId, client, inputs, outputs, {
         key: Converter.utf8ToBytes("WALLET"),
         data: Converter.utf8ToBytes("Not trinity")
     });
 
-    console.log("Created Message Id", messageId);
-
-    const newAddressBalance = await getBalance(client, walletSeed, 0);
-    console.log("Wallet 1 Address Balance", newAddressBalance);
-
-    const unspentAddress = await getUnspentAddress(client, walletSeed, 0);
-    console.log("Wallet 1 First Unspent Address", unspentAddress);
-
-    const allUspentAddresses = await getUnspentAddresses(client, walletSeed, 0);
-    console.log("Wallet 1 Unspent Addresses", allUspentAddresses);
     });
   });
 });
