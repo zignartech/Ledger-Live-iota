@@ -1,11 +1,10 @@
-import Struct from 'struct';
-import bippath from 'bip32-path';
-import bech32 from 'bech32';
-import { getErrorMessage } from './error';
-import Transport from '@ledgerhq/hw-transport';
-import { _0Xbtc } from '../../../data/icons/react';
+import Struct from "struct";
+import bippath from "bip32-path";
+import bech32 from "bech32";
+import { getErrorMessage } from "./error";
+import Transport from "@ledgerhq/hw-transport";
 import { log } from "@ledgerhq/logs";
-import { CryptoCurrency } from '@ledgerhq/types-cryptoassets';
+import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import {
   CLA,
   ADPUInstructions,
@@ -14,15 +13,15 @@ import {
   Flows,
   ED25519_PUBLIC_KEY_LENGTH,
   ED25519_SIGNATURE_LENGTH,
-  AppModes
-} from './constants';
+  AppModes,
+} from "./constants";
 
 /**
  * IOTA API
  * @module hw-app-iota
  */
 
- interface AddressOptions {
+interface AddressOptions {
   prefix: string;
   display: boolean;
 }
@@ -37,7 +36,11 @@ import {
 class Iota {
   transport: Transport;
   constructor(transport: Transport) {
-    transport.decorateAppAPIMethods(this, ["getAppVersion", "getAddres"], "IOTA");
+    transport.decorateAppAPIMethods(
+      this,
+      ["getAppVersion", "getAddres"],
+      "IOTA"
+    );
     this.transport = transport;
   }
 
@@ -64,12 +67,13 @@ class Iota {
    * iota.getAddress(0, { prefix: 'atoi' });
    **/
   async getAddress(
-    path: string, 
-    currency: CryptoCurrency, 
+    path: string,
+    currency: CryptoCurrency,
     options: AddressOptions = {
-      display: false, 
-      prefix: currency.units[0].name.toLowerCase()
-    }): Promise<string>{
+      display: false,
+      prefix: currency.units[0].name.toLowerCase(),
+    }
+  ): Promise<string> {
     const pathArray = Iota._validatePath(path);
 
     await this._setAccount(pathArray[2], currency);
@@ -89,14 +93,14 @@ class Iota {
     }
 
     if (!pathArray || pathArray.length != 5) {
-      throw new Error('"path" invalid: ' + 'Invalid path length');
+      throw new Error('"path" invalid: ' + "Invalid path length");
     }
 
     return pathArray;
   }
 
   async _setAccount(account: any, currency: CryptoCurrency): Promise<void> {
-    const setAccountInStruct = Struct().word32Ule('account') as any;
+    const setAccountInStruct = Struct().word32Ule("account") as any;
 
     setAccountInStruct.allocate();
     setAccountInStruct.fields.account = account;
@@ -110,7 +114,7 @@ class Iota {
         app_mode = AppModes.ModeShimmer;
         break;
       default:
-        throw new Error('packable error: ' + 'IncorrectP1P2');
+        throw new Error("packable error: " + "IncorrectP1P2");
     }
 
     await this._sendCommand(
@@ -122,7 +126,12 @@ class Iota {
     );
   }
 
-  async _getDataBufferState(): Promise<{ data_length: number; data_type: any; data_block_size: number; data_block_count: any; }> {
+  async _getDataBufferState(): Promise<{
+    data_length: number;
+    data_type: any;
+    data_block_size: number;
+    data_block_count: any;
+  }> {
     const response = await this._sendCommand(
       ADPUInstructions.INS_GET_DATA_BUFFER_STATE,
       0,
@@ -132,10 +141,10 @@ class Iota {
     );
 
     const getDataBufferStateOutStruct = Struct()
-      .word16Ule('data_length')
-      .word8('data_type')
-      .word8('data_block_size')
-      .word8('data_block_count') as any;
+      .word16Ule("data_length")
+      .word8("data_type")
+      .word8("data_block_size")
+      .word8("data_block_count") as any;
     getDataBufferStateOutStruct.setBuffer(response);
 
     const fields = getDataBufferStateOutStruct.fields;
@@ -147,7 +156,13 @@ class Iota {
     };
   }
 
-  async _readDataBlock({ block, size }: { block: number; size: number; }): Promise<Uint8Array> {
+  async _readDataBlock({
+    block,
+    size,
+  }: {
+    block: number;
+    size: number;
+  }): Promise<Uint8Array> {
     const response = await this._sendCommand(
       ADPUInstructions.INS_READ_DATA_BLOCK,
       block,
@@ -156,7 +171,7 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
 
-    const readDataBlockOutStruct = Struct().array('data', size, 'word8') as any;
+    const readDataBlockOutStruct = Struct().array("data", size, "word8") as any;
     readDataBlockOutStruct.setBuffer(response);
     const fields = readDataBlockOutStruct.fields;
 
@@ -185,7 +200,10 @@ class Iota {
 
     let offset = 0;
     for (let i = 0; i < blocks; i++) {
-      const block = await this._readDataBlock({ block: i, size: state.data_block_size });
+      const block = await this._readDataBlock({
+        block: i,
+        size: state.data_block_size,
+      });
       data.set(block, offset);
       offset += block.length;
     }
@@ -252,16 +270,21 @@ class Iota {
     );
   }
 
-  async _prepareSigning(ramainderIdx: any, bip32Idx: any, bip32Change: any, p2: any): Promise<void> {
+  async _prepareSigning(
+    ramainderIdx: any,
+    bip32Idx: any,
+    bip32Change: any,
+    p2: any
+  ): Promise<void> {
     const prepareSigningInStruct = Struct()
-      .word32Ule('remainder_index')
-      .word32Ule('remainder_bip32_index')
-      .word32Ule('remainder_bip32_change') as any;
+      .word32Ule("remainder_index")
+      .word32Ule("remainder_bip32_index")
+      .word32Ule("remainder_bip32_change") as any;
 
-      prepareSigningInStruct.allocate();
-      prepareSigningInStruct.fields.bip32_index = ramainderIdx;
-      prepareSigningInStruct.fields.remainder_bip32_index = bip32Idx;
-      prepareSigningInStruct.fields.remainder_bip32_change = bip32Change;
+    prepareSigningInStruct.allocate();
+    prepareSigningInStruct.fields.bip32_index = ramainderIdx;
+    prepareSigningInStruct.fields.remainder_bip32_index = bip32Idx;
+    prepareSigningInStruct.fields.remainder_bip32_change = bip32Change;
 
     await this._sendCommand(
       ADPUInstructions.INS_PREPARE_SIGNING,
@@ -272,11 +295,16 @@ class Iota {
     );
   }
 
-  async _generateAddress(change: any, index: any, count: number, display = false): Promise<void> {
+  async _generateAddress(
+    change: any,
+    index: any,
+    count: number,
+    display = false
+  ): Promise<void> {
     const generateAddressInStruct = Struct()
-      .word32Ule('bip32_index')
-      .word32Ule('bip32_change')
-      .word32Ule('count') as any;
+      .word32Ule("bip32_index")
+      .word32Ule("bip32_change")
+      .word32Ule("count") as any;
 
     generateAddressInStruct.allocate();
     generateAddressInStruct.fields.bip32_index = index;
@@ -311,27 +339,31 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
     const signatureType = response.at(0);
-    let data = Struct();
+    const data = Struct();
     switch (signatureType) {
       case 0:
         data
-          .word8('signature_type')
-          .word8('unknown') // TODO: replace with correct block name
-          .array('ed25519_public_key', ED25519_PUBLIC_KEY_LENGTH, 'word8')
-          .array('ed25519_signature', ED25519_SIGNATURE_LENGTH, 'word8');
+          .word8("signature_type")
+          .word8("unknown") // TODO: replace with correct block name
+          .array("ed25519_public_key", ED25519_PUBLIC_KEY_LENGTH, "word8")
+          .array("ed25519_signature", ED25519_SIGNATURE_LENGTH, "word8");
         break;
-      case 1: 
-        data
-          .word8('signature_type')
-          .array('reference', 2, 'word8')
+      case 1:
+        data.word8("signature_type").array("reference", 2, "word8");
+        break;
       default:
-        throw new Error('packable error: ' + 'Invalid variant');
-        // TODO: return the error
+        throw new Error("packable error: " + "Invalid variant");
+      // TODO: return the error
     }
     return data;
   }
 
-  async _getAppConfig(): Promise<{ app_version: string; app_flags: any; device: any; debug: any; }> {
+  async _getAppConfig(): Promise<{
+    app_version: string;
+    app_flags: any;
+    device: any;
+    debug: any;
+  }> {
     const response = await this._sendCommand(
       ADPUInstructions.INS_GET_APP_CONFIG,
       0,
@@ -341,21 +373,21 @@ class Iota {
     );
 
     const getAppConfigOutStruct = Struct()
-      .word8('app_version_major')
-      .word8('app_version_minor')
-      .word8('app_version_patch')
-      .word8('app_flags')
-      .word8('device')
-      .word8('debug') as any;
+      .word8("app_version_major")
+      .word8("app_version_minor")
+      .word8("app_version_patch")
+      .word8("app_flags")
+      .word8("device")
+      .word8("debug") as any;
     getAppConfigOutStruct.setBuffer(response);
 
     const fields = getAppConfigOutStruct.fields;
     return {
       app_version:
         fields.app_version_major +
-        '.' +
+        "." +
         fields.app_version_minor +
-        '.' +
+        "." +
         fields.app_version_patch,
       app_flags: fields.app_flags,
       device: fields.device,
@@ -373,7 +405,13 @@ class Iota {
     );
   }
 
-  async _sendCommand(ins: number, p1: number, p2: number, data: undefined, timeout: number): Promise<any> {
+  async _sendCommand(
+    ins: number,
+    p1: number,
+    p2: number,
+    data: undefined,
+    timeout: number
+  ): Promise<any> {
     const transport = this.transport;
     try {
       transport.setExchangeTimeout(timeout);
@@ -390,4 +428,4 @@ class Iota {
 
 export default Iota;
 
-export { TIMEOUT_CMD_NON_USER_INTERACTION, ADPUInstructions }
+export { TIMEOUT_CMD_NON_USER_INTERACTION, ADPUInstructions };
