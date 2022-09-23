@@ -3,7 +3,7 @@ import bippath from "bip32-path";
 import bech32 from "bech32";
 import { getErrorMessage } from "./error";
 import Transport from "@ledgerhq/hw-transport";
-import { log } from "@ledgerhq/logs";
+// import { log } from "@ledgerhq/logs";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import {
   CLA,
@@ -271,10 +271,10 @@ class Iota {
   }
 
   async _prepareSigning(
-    ramainderIdx: any,
-    bip32Idx: any,
-    bip32Change: any,
-    p2: any
+    p2: number,
+    ramainderIdx: number,
+    bip32Idx: number,
+    bip32Change: number
   ): Promise<void> {
     const prepareSigningInStruct = Struct()
       .word32Ule("remainder_index")

@@ -1528,16 +1528,21 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
     family: "iota",
     units: [
       {
+        name: "MIOTA",
+        code: "MIOTA",
+        magnitude: 6,
+      },
+      {
         name: "IOTA",
         code: "IOTA",
-        magnitude: 8,
+        magnitude: 0,
       },
     ],
     explorerViews: [
       {
         address: "https://explorer.iota.org/mainnet/addr/$address",
         tx: "https://explorer.iota.org/mainnet/message/$hash",
-      }
+      },
     ],
   },
   iov: {
@@ -2503,7 +2508,12 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
       {
         name: "SMR",
         code: "SMR",
-        magnitude: 8,
+        magnitude: 6,
+      },
+      {
+        name: "glow",
+        code: "glow",
+        magnitude: 0,
       },
     ],
     explorerViews: [

@@ -17,7 +17,7 @@ import {
     UTXO_INPUT_TYPE
 } from "@iota/iota.js";
 import { Converter } from "@iota/util.js";
-import signOperation from "../signOperation";
+import signOperation from "../js-signOperation";
 import fs from 'fs';
 import path from 'path';
 import { IReferenceUnlockBlock, REFERENCE_UNLOCK_BLOCK_TYPE } from "@iota/iota.js";

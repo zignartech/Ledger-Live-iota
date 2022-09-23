@@ -1,20 +1,24 @@
 import { BigNumber } from "bignumber.js";
 import flatMap from "lodash/flatMap";
 import { log } from "@ledgerhq/logs";
-import { CurrencyNotSupported } from "@ledgerhq/errors";
 import type {
   Account,
   AccountBridge,
   CurrencyBridge,
   Operation,
 } from "@ledgerhq/types-live";
+import {
+  createTransaction,
+  updateTransaction,
+  prepareTransaction,
+} from "../js-transaction";
 import type { Transaction, TransactionStatus } from "../types";
 import { parseCurrencyUnit, getCryptoCurrencyById } from "../../../currencies";
 import network from "../../../network";
 import { makeSync, makeScanAccounts } from "../../../bridge/jsHelpers";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
-import { BigNumFromString } from "../../solana/api/chain/validators/bignum";
-import { valueToBigNumber } from "@celo/contractkit/lib/wrappers/BaseWrapper";
+import { CurrencyNotSupported } from "@ledgerhq/errors";
+import estimateMaxSpendable from "../js-estimateMaxSpendable";
 
 const receive = makeAccountBridgeReceive();
 
@@ -38,7 +42,7 @@ const txToOps =
         hash,
         type: "OUT",
         value: value,
-        fee: valueToBigNumber(0),
+        fee: new BigNumber(0),
         blockHeight: tx.block_height,
         blockHash: null,
         accountId: id,
@@ -55,7 +59,7 @@ const txToOps =
         hash,
         type: "IN",
         value,
-        fee: valueToBigNumber(0),
+        fee: new BigNumber(0),
         blockHeight: tx.block_height,
         blockHash: null,
         accountId: id,
@@ -143,29 +147,12 @@ const currencyBridge: CurrencyBridge = {
   scanAccounts,
 };
 
-const createTransaction = (a: Account): Transaction => {
-  throw new CurrencyNotSupported("iota currency not supported", {
-    currencyName: a.currency.name,
-  });
-};
-
-const updateTransaction = (
-  t: Transaction,
-  patch: Transaction
-): Transaction => ({ ...t, ...patch });
-
 const getTransactionStatus = (a: Account): Promise<TransactionStatus> =>
   Promise.reject(
     new CurrencyNotSupported("iota currency not supported", {
       currencyName: a.currency.name,
     })
   );
-
-const estimateMaxSpendable = (): Promise<BigNumber> =>
-  Promise.reject(new Error("estimateMaxSpendable not implemented"));
-
-const prepareTransaction = async (a, t: Transaction): Promise<Transaction> =>
-  Promise.resolve(t);
 
 const accountBridge: AccountBridge<Transaction> = {
   createTransaction,
