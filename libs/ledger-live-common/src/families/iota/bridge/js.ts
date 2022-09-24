@@ -12,6 +12,7 @@ import {
   updateTransaction,
   prepareTransaction,
 } from "../js-transaction";
+import signOperation from "../js-signOperation";
 import type { Transaction, TransactionStatus } from "../types";
 import { parseCurrencyUnit, getCryptoCurrencyById } from "../../../currencies";
 import network from "../../../network";
@@ -73,10 +74,15 @@ const txToOps =
     return ops;
   };
 
-const root = "https://api.neoscan.io";
+const API_ENDPOINTS = {
+  IOTA_MAINNET: "",
+  IOTA_ALPHANET: "https://api.alphanet.iotaledger.net/",
+  SHIMMER_MAINNET: "",
+  SHIMMER_TESTNET: "https://api.testnet.shimmer.network/",
+};
 
-async function fetch(path) {
-  const url = root + path;
+async function fetch(path: string) {
+  const url = API_ENDPOINTS.SHIMMER_TESTNET + path;
   const { data } = await network({
     method: "GET",
     url,
@@ -162,9 +168,7 @@ const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   sync,
   receive,
-  signOperation: () => {
-    throw new Error("signOperation not implemented");
-  },
+  signOperation,
   broadcast: () => {
     throw new Error("broadcast not implemented");
   },

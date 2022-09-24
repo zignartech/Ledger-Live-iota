@@ -3,7 +3,7 @@ import bippath from "bip32-path";
 import bech32 from "bech32";
 import { getErrorMessage } from "./error";
 import Transport from "@ledgerhq/hw-transport";
-// import { log } from "@ledgerhq/logs";
+import { log } from "@ledgerhq/logs";
 import { CryptoCurrency } from "@ledgerhq/types-cryptoassets";
 import {
   CLA,
@@ -50,6 +50,7 @@ class Iota {
    * @returns {Promise<String>} Semantic Version string (i.e. MAJOR.MINOR.PATCH)
    **/
   async getAppVersion(): Promise<string> {
+    log("getting app version...");
     const config = await this._getAppConfig();
     return config.app_version;
   }
@@ -74,11 +75,13 @@ class Iota {
       prefix: currency.units[0].name.toLowerCase(),
     }
   ): Promise<string> {
+    log("getting address...");
     const pathArray = Iota._validatePath(path);
 
-    await this._setAccount(pathArray[2], currency);
-    await this._generateAddress(pathArray[3], pathArray[4], 1, options.display);
+    await this._setAccount(pathArray[0], currency);
+    await this._generateAddress(pathArray[1], pathArray[2], 1, options.display);
     const addressData = await this._getData();
+    log("getting address done.");
     return bech32.encode(options.prefix, bech32.toWords(addressData));
   }
 
@@ -92,14 +95,18 @@ class Iota {
       throw new Error('"path" invalid: ' + e.message);
     }
 
-    if (!pathArray || pathArray.length != 5) {
-      throw new Error('"path" invalid: ' + "Invalid path length");
+    if (!pathArray || pathArray.length != 3) {
+      throw new Error(
+        `"path" invalid: Invalid path length: ${pathArray.length}`
+      );
     }
 
+    log("validatePath end");
     return pathArray;
   }
 
   async _setAccount(account: any, currency: CryptoCurrency): Promise<void> {
+    log("setting account...");
     const setAccountInStruct = Struct().word32Ule("account") as any;
 
     setAccountInStruct.allocate();
@@ -124,6 +131,7 @@ class Iota {
       setAccountInStruct.buffer(),
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
+    log("setting account done...");
   }
 
   async _getDataBufferState(): Promise<{
@@ -182,7 +190,8 @@ class Iota {
     return data;
   }
 
-  async _writeDataBlock(blockNr: any, data: any): Promise<void> {
+  async _writeDataBlock(blockNr: number, data: any): Promise<void> {
+    log("writing data block...");
     await this._sendCommand(
       ADPUInstructions.INS_PREPARE_SIGNING,
       blockNr,
@@ -330,7 +339,7 @@ class Iota {
     );
   }
 
-  async _signSingle(index: any): Promise<any> {
+  async _signSingle(index: number): Promise<any> {
     const response = await this._sendCommand(
       ADPUInstructions.INS_SIGN_SINGLE,
       index,
@@ -353,7 +362,6 @@ class Iota {
         break;
       default:
         throw new Error("packable error: " + "Invalid variant");
-      // TODO: return the error
     }
     return data;
   }

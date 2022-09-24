@@ -6,7 +6,6 @@ import type {
 } from "@ledgerhq/types-live";
 import type { BigNumber } from "bignumber.js";
 
-
 export type Transaction = TransactionCommon & {
   family: "iota";
   amount: BigNumber;

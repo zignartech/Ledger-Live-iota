@@ -16,10 +16,14 @@ SEND ${formatCurrencyUnit(getAccountUnit(account), t.amount, {
 })}
 TO ${t.recipient}`;
 
-const fromTransactionRaw = (tr: TransactionRaw): Transaction => {
+export function fromTransactionRaw(tr: TransactionRaw): Transaction {
   const common = fromTransactionCommonRaw(tr);
-  return { ...common, family: tr.family };
-};
+
+  return {
+    ...common,
+    family: tr.family,
+  };
+}
 
 const toTransactionRaw = (t: Transaction): TransactionRaw => {
   const common = toTransactionCommonRaw(t);
