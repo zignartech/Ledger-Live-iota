@@ -90,6 +90,11 @@ const envDefinitions = {
     def: "https://polkadot-sidecar.coin.ledger.com",
     desc: "Polkadot Sidecar API url",
   },
+  API_IOTA_NODE: {
+    parser: stringParser,
+    def: "https://chrysalis-nodes.iota.org",
+    desc: "IOTA API url"
+  },
   ELROND_API_ENDPOINT: {
     parser: stringParser,
     def: "https://elrond.coin.ledger.com",

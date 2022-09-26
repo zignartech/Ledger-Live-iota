@@ -25,7 +25,7 @@ const receive = makeAccountBridgeReceive();
 
 const iotaUnit = getCryptoCurrencyById("iota").units[0];
 
-const txToOps =
+export const txToOps =
   ({ id, address }) =>
   (tx: Record<string, any>): Operation[] => {
     const ops: Operation[] = [];
@@ -96,7 +96,7 @@ async function fetchBalances(addr: string) {
   return data.balance;
 }
 
-async function fetchBlockHeight() {
+export async function fetchBlockHeight() {
   const data = await fetch("/api/main_net/v1/get_height");
   return data.height;
 }
