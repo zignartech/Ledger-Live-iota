@@ -1,11 +1,24 @@
-import { Account } from '@ledgerhq/types-live';
-import axios, { AxiosResponse } from 'axios';
 import BigNumber from 'bignumber.js';
 import { getEnv } from '../../../env';
-import network from '../../../network';
+import network from '../../../network'
+import type { Operation } from "@ledgerhq/types-live";;
+import { txToOp } from '../bridge/js';
+import { MessageResponse, OutputsAddressResponse } from './types';
 
 const getIotaUrl = (route): string =>
   `${getEnv('API_IOTA_NODE')}${route || ''}`;
+
+const fetchSingleTransaction = async (transactionId: string) => {
+    const {
+        data,
+    }: {
+        data;
+    } = await network({
+        method: 'GET',
+        url: getIotaUrl(`/api/v1/transactions/${transactionId}/included-message`),
+    });
+    return data as MessageResponse;
+}
 
 const fetchBalance = async (address: string) => {
   const {
@@ -28,14 +41,19 @@ const fetchAllTransactions = async (address: string) => {
         method: 'GET',
         url: getIotaUrl(`/api/v1/addresses/${address}/outputs`),
     });
-    return data;
+    const output = data as OutputsAddressResponse;
+    const transactions: MessageResponse[] = [];
+    output.data.outputIds.forEach(async (outputId) => {
+        transactions.push(await fetchSingleTransaction(outputId))
+    });
+    return transactions;
 }
 export const getAccount = async (address: string, accountId: string) => {
   const balanceInfo = await fetchBalance(address);
   const balance = new BigNumber(balanceInfo.balance);
   const spendableBalance = new BigNumber(balanceInfo.balance);
   return {
-    blockHeight: balanceInfo.at?.height ? Number(balanceInfo.at.height) : null,
+    blockHeight: balanceInfo.at?.height ? Number(balanceInfo.at.height) : undefined,
     balance,
     spendableBalance,
     nonce: Number(balanceInfo.nonce),
@@ -46,24 +64,14 @@ export const getAccount = async (address: string, accountId: string) => {
 export const getOperations = async (
   id: string,
   address: string,
-  startAt: number
 ) => {
-  const operations = [];
-  const transactions = await getTransactions(address, startAt);
+  const operations: Operation[] = [];
+  const transactions = await fetchAllTransactions(address);
   transactions.forEach((transaction) => {
-    const operation: Operation = {
-      id,
-      hash: transaction.hash,
-      type: transaction.type,
-      value: transaction.value,
-      fee: transaction.fee,
-      blockHeight: transaction.blockHeight,
-      blockHash: transaction.blockHash,
-      senders: transaction.senders,
-      recipients: transaction.recipients,
-      accountId: id,
-    };
-    operations.push(operation);
+    const operation = txToOp(transaction, id, address);
+    if (operation) {
+      operations.push(operation);
+    }
   });
   return operations;
 };
