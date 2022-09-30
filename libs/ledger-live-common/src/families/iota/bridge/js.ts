@@ -1,12 +1,6 @@
 import { BigNumber } from "bignumber.js";
-import flatMap from "lodash/flatMap";
 import { log } from "@ledgerhq/logs";
-import type {
-  Account,
-  AccountBridge,
-  CurrencyBridge,
-  Operation,
-} from "@ledgerhq/types-live";
+import type { Account, AccountBridge, Operation } from "@ledgerhq/types-live";
 import {
   createTransaction,
   updateTransaction,
@@ -20,19 +14,23 @@ import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { CurrencyNotSupported } from "@ledgerhq/errors";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import { MessageResponse, TransactionPayload, Message } from "../api/types"; //xddxd
-import { sync } from "../js-synchronisation";
+import { currencyBridge, sync } from "../js-synchronisation";
 
 const receive = makeAccountBridgeReceive();
 
-const iotaUnit = getCryptoCurrencyById("iota").units[0];
-
-export const txToOp =
-  (transaction: MessageResponse, id: string, address: string) => {
-    const data = transaction.data.allOf && transaction.data.allOf[0] ? transaction.data.allOf[0] : null;
-    if (!data) {
-      return null;
-    }
-    /*
+export const txToOp = (
+  transaction: MessageResponse,
+  id: string,
+  address: string
+) => {
+  const data =
+    transaction.data.allOf && transaction.data.allOf[0]
+      ? transaction.data.allOf[0]
+      : null;
+  if (!data) {
+    return null;
+  }
+  /*
     Example of data:
     {
       "data": {
@@ -85,36 +83,36 @@ export const txToOp =
       }
     }
      */
-    const realData = data as Message;
-    const payload = realData.payload as TransactionPayload;
-    const essence = payload.essence;
-    const inputs = essence.inputs;
-    const outputs = essence.outputs;
-    const input = inputs[0];
-    const output = outputs[0];
-    const value = output.amount;
-    const type = address === output.address.address ? "IN" : "OUT";
-    const hash = "10"; // FIXME: what is this?
-    const blockHash = "15"; FIXME: // and this?
-    const blockHeight = 0; // FIXME: and this?
+  const realData = data as Message;
+  const payload = realData.payload as TransactionPayload;
+  const essence = payload.essence;
+  const inputs = essence.inputs;
+  const outputs = essence.outputs;
+  const input = inputs[0];
+  const output = outputs[0];
+  const value = output.amount;
+  const type = address === output.address.address ? "IN" : "OUT";
+  const hash = "10"; // FIXME: what is this?
+  const blockHash = "15"; // and this?
+  const blockHeight = 0; // FIXME: and this?
 
-    const op: Operation = {
-      id: `${id}-${hash}-${type}`,
-      hash,
-      type,
-      value: new BigNumber(value),
-      fee: new BigNumber(0),
-      blockHash,
-      blockHeight: blockHeight,
-      senders: [input.transactionId],
-      recipients: [address],
-      accountId: id,
-      date: new Date(),
-      extra: {},
+  const op: Operation = {
+    id: `${id}-${hash}-${type}`,
+    hash,
+    type,
+    value: new BigNumber(value),
+    fee: new BigNumber(0),
+    blockHash,
+    blockHeight: blockHeight,
+    senders: [input.transactionId],
+    recipients: [address],
+    accountId: id,
+    date: new Date(),
+    extra: {},
   };
 
   return op;
-}
+};
 
 const API_ENDPOINTS = {
   IOTA_MAINNET: "",
@@ -133,35 +131,9 @@ async function fetch(path: string) {
   return data;
 }
 
-async function fetchBalances(addr: string) {
-  const data = await fetch(`/api/main_net/v1/get_balance/${addr}`);
-  return data.balance;
-}
-
 export async function fetchBlockHeight() {
   const data = await fetch("/api/main_net/v1/get_height");
   return data.height;
-}
-
-async function fetchTxs(
-  addr: string,
-  shouldFetchMoreTxs: (arg0: Operation[]) => boolean
-) {
-  let i = 0;
-
-  const load = () =>
-    fetch(`/api/main_net/v1/get_address_abstracts/${addr}/${i + 1}`);
-
-  let payload = await load();
-  let txs = [];
-
-  while (payload && i < payload.total_pages && shouldFetchMoreTxs(txs)) {
-    txs = txs.concat(payload.entries);
-    i++;
-    payload = await load();
-  }
-
-  return txs;
 }
 
 const getTransactionStatus = (a: Account): Promise<TransactionStatus> =>
@@ -186,4 +158,5 @@ const accountBridge: AccountBridge<Transaction> = {
 };
 export default {
   accountBridge,
+  currencyBridge,
 };

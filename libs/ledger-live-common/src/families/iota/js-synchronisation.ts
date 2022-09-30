@@ -1,12 +1,10 @@
-import type { Account, CurrencyBridge } from '@ledgerhq/types-live';
-import type { GetAccountShape } from '../../bridge/jsHelpers';
-import { makeSync, makeScanAccounts, mergeOps } from '../../bridge/jsHelpers';
+import type { Account, CurrencyBridge } from "@ledgerhq/types-live";
+import type { GetAccountShape } from "../../bridge/jsHelpers";
+import { makeSync, makeScanAccounts, mergeOps } from "../../bridge/jsHelpers";
 
-import { encodeAccountId } from '../../account';
+import { encodeAccountId } from "../../account";
 
-import { getAccount, getOperations } from './api';
-
-
+import { getAccount, getOperations } from "./api";
 
 const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, initialAccount, derivationMode } = info;
@@ -18,8 +16,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     : 0;
 
   const accountId = encodeAccountId({
-    type: 'js',
-    version: '2',
+    type: "js",
+    version: "2",
     currencyId: currency.id,
     xpubOrAddress: address,
     derivationMode,
@@ -49,9 +47,8 @@ const postSync = (initial: Account, parent: Account) => parent;
 export const scanAccounts = makeScanAccounts({ getAccountShape });
 export const sync = makeSync({ getAccountShape, postSync });
 
-const currencyBridge: CurrencyBridge = {
+export const currencyBridge: CurrencyBridge = {
   preload: () => Promise.resolve({}),
   hydrate: () => {},
   scanAccounts,
 };
-
