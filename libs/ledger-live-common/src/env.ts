@@ -95,6 +95,11 @@ const envDefinitions = {
     def: "https://chrysalis-nodes.iota.org",
     desc: "IOTA API url"
   },
+  API_SHIMMER_NODE: {
+    parser: stringParser,
+    def: "https://api.shimmer.network",
+    desc: "SHIMMER API url"
+  },
   ELROND_API_ENDPOINT: {
     parser: stringParser,
     def: "https://elrond.coin.ledger.com",

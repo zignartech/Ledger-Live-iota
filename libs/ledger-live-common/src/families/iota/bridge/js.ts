@@ -13,19 +13,19 @@ import network from "../../../network";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { CurrencyNotSupported } from "@ledgerhq/errors";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
-import { MessageResponse, TransactionPayload, Message } from "../api/types"; //xddxd
+import { TransactionPayload, BlockResponse, Block } from "../api/types"; //xddxd
 import { currencyBridge, sync } from "../js-synchronisation";
 
 const receive = makeAccountBridgeReceive();
 
 export const txToOp = (
-  transaction: MessageResponse,
+  transaction: BlockResponse,
   id: string,
   address: string
 ) => {
   const data =
-    transaction.data.allOf && transaction.data.allOf[0]
-      ? transaction.data.allOf[0]
+    transaction.allOf && transaction.allOf[0]
+      ? transaction.allOf[0] as Block
       : null;
   if (!data) {
     return null;
@@ -33,65 +33,67 @@ export const txToOp = (
   /*
     Example of data:
     {
-      "data": {
-        "networkId": "7712883261355838377",
-        "parentMessageIds": [
-          "174e3151f6ce2cfb7f00829ac4a96a35caa2078cc20eba99359867cd21aad0d6",
-          "5807bb4ad068e6cdadd103218e4e24ed55b62c985d4f64e97808d9f09180f89c",
-          "7a09324557e9200f39bf493fc8fd6ac43e9ca750c6f6d884cc72386ddcb7d695",
-          "de9e9d780ba7ebeebc38da16cb53b2a8991d38eee94bcdc3f3ef99aa8c345652"
-        ],
-        "payload": {
-          "type": 0,
-          "essence": {
-            "type": 0,
-            "inputs": [
-              {
-                "type": 0,
-                "transactionId": "af7579fb57746219561072c2cc0e4d0fbb8d493d075bd21bf25ae81a450c11ef",
-                "transactionOutputIndex": 0
-              }
-            ],
-            "outputs": [
-              {
+      "protocolVersion": 2,
+      "parents": [
+        "0x174e3151f6ce2cfb7f00829ac4a96a35caa2078cc20eba99359867cd21aad0d6",
+        "0x5807bb4ad068e6cdadd103218e4e24ed55b62c985d4f64e97808d9f09180f89c",
+        "0x7a09324557e9200f39bf493fc8fd6ac43e9ca750c6f6d884cc72386ddcb7d695",
+        "0xde9e9d780ba7ebeebc38da16cb53b2a8991d38eee94bcdc3f3ef99aa8c345652"
+      ],
+      "payload": {
+        "type": 6,
+        "essence": {
+          "type": 1,
+          "networkId": "1337133713371337",
+          "inputsCommitment": "0x0e6c2998f5177834ecb3bae1596d5056af76e487386eecb19727465b4be86a79",
+          "inputs": [
+            {
+              "type": 0,
+              "transactionId": "0xaf7579fb57746219561072c2cc0e4d0fbb8d493d075bd21bf25ae81a450c11ef",
+              "transactionOutputIndex": 0
+            }
+          ],
+          "outputs": [
+            {
+              "type": 3,
+              "unlockConditions": {
                 "type": 0,
                 "address": {
                   "type": 0,
-                  "address": "a18996d96163405e3c0eb13fa3459a07f68a89e8cf7cc239c89e7192344daa5b"
-                },
-                "amount": 1000000
-              }
-            ],
-            "payload": {
-              "type": 2,
-              "index": "454f59",
-              "data": ""
+                  "pubKeyHash": "0xa18996d96163405e3c0eb13fa3459a07f68a89e8cf7cc239c89e7192344daa5b"
+                }
+              },
+              "amount": "1000000"
             }
-          },
-          "unlockBlocks": [
-            {
-              "type": 0,
-              "signature": {
-                "type": 0,
-                "publicKey": "ee26ac07834c603c22130fced361ca58552b0dbfc63e4b73ba24b3b59d9f4050",
-                "signature": "0492a353f96883c472e2686a640e77eda30be8fcc417aa9fc1c15eae854661e0253287be6ea68f649f19ca590de0a6c57fb88635ef0e013310e0be2b83609503"
-              }
-            }
-          ]
+          ],
+          "payload": {
+            "type": 2,
+            "index": "0x454f59",
+            "data": ""
+          }
         },
-        "nonce": "17293822569102719312"
-      }
+        "unlocks": [
+          {
+            "type": 0,
+            "signature": {
+              "type": 0,
+              "publicKey": "0xee26ac07834c603c22130fced361ca58552b0dbfc63e4b73ba24b3b59d9f4050",
+              "signature": "0x0492a353f96883c472e2686a640e77eda30be8fcc417aa9fc1c15eae854661e0253287be6ea68f649f19ca590de0a6c57fb88635ef0e013310e0be2b83609503"
+            }
+          }
+        ]
+      },
+      "nonce": "17293822569102719312"
     }
-     */
-  const realData = data as Message;
-  const payload = realData.payload as TransactionPayload;
+  */
+  const payload = data.payload as TransactionPayload;
   const essence = payload.essence;
   const inputs = essence.inputs;
   const outputs = essence.outputs;
   const input = inputs[0];
   const output = outputs[0];
   const value = output.amount;
-  const type = address === output.address.address ? "IN" : "OUT";
+  const type = input.transactionId === id ? "OUT" : "IN";
   const hash = "10"; // FIXME: what is this?
   const blockHash = "15"; // and this?
   const blockHeight = 0; // FIXME: and this?
