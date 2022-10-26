@@ -17,7 +17,9 @@ const fetchSingleTransaction = async (transactionId: string) => {
     data;
   } = await network({
     method: "GET",
-    url: getShimmerUrl(`/api/core/v2/transactions/${transactionId}/included-message`),
+    url: getShimmerUrl(
+      `/api/core/v2/transactions/${transactionId.slice(0, -4)}/included-block`
+    ),
   });
   return data as BlockResponse;
 };
@@ -25,12 +27,12 @@ const fetchSingleTransaction = async (transactionId: string) => {
 const fetchBalance = async (address: string) => {
   const outputs = await fetchAllOutputs(address);
   let balance = new BigNumber(0);
-  outputs.items.forEach(async (outputId) => {
-    const output = await fetchSingleOutput(outputId);
+  for (let i = 0; i < outputs.items.length; i++) {
+    const output = await fetchSingleOutput(outputs.items[i]);
     if (!output.metadata.isSpent) {
-      balance = balance.plus(output.output.amount);
+      balance = balance.plus(new BigNumber(output.output.amount));
     }
-  });
+  }
   return balance;
 };
 
@@ -82,11 +84,11 @@ export const getAccount = async (address: string, accountId: string) => {
 export const getOperations = async (id: string, address: string) => {
   const operations: Operation[] = [];
   const transactions = await fetchAllTransactions(address);
-  transactions.forEach((transaction) => {
-    const operation = txToOp(transaction, id, address);
+  for (let i = 0; i < transactions.length; i++) {
+    const operation = txToOp(transactions[i], id, address);
     if (operation) {
       operations.push(operation);
     }
-  });
+  }
   return operations;
 };

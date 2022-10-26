@@ -36,7 +36,8 @@ const getAccountShape: GetAccountShape = async (info) => {
     balance,
     spendableBalance,
     operationsCount: operations.length,
-    blockHeight,
+    blockHeight: 10,
+    id: accountId,
   };
 
   return { ...shape, operations };

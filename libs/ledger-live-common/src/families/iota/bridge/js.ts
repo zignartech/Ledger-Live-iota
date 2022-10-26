@@ -25,7 +25,7 @@ export const txToOp = (
 ) => {
   const data =
     transaction.allOf && transaction.allOf[0]
-      ? transaction.allOf[0] as Block
+      ? (transaction.allOf[0] as Block)
       : null;
   if (!data) {
     return null;

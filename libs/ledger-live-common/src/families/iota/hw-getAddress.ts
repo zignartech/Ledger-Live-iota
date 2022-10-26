@@ -5,10 +5,7 @@ import type { Resolver } from "../../hw/getAddress/types";
 const resolver: Resolver = async (transport, { path, currency }) => {
   const iota = new Iota(transport);
 
-  const r = await iota.getAddress(path, currency, {
-    prefix: "rms",
-    display: false,
-  });
+  const r = await iota.getAddress(path, currency);
   return {
     path,
     address: r,

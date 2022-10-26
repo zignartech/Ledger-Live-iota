@@ -78,8 +78,8 @@ class Iota {
     log("getting address...");
     const pathArray = Iota._validatePath(path);
 
-    await this._setAccount(pathArray[0], currency);
-    await this._generateAddress(pathArray[1], pathArray[2], 1, options.display);
+    await this._setAccount(pathArray[2], currency);
+    await this._generateAddress(pathArray[3], pathArray[4], 1, options.display);
     const addressData = await this._getData();
     log("getting address done.");
     return bech32.encode(options.prefix, bech32.toWords(addressData));
@@ -87,15 +87,25 @@ class Iota {
 
   ///////// Private methods should not be called directly! /////////
 
-  static _validatePath(path: string): string | any[] {
-    let pathArray: string | any[];
+  static _validatePath(path: string): number[] {
+    let pathArray: number[];
     try {
       pathArray = bippath.fromString(path).toPathArray();
     } catch (e: any) {
       throw new Error('"path" invalid: ' + e.message);
     }
 
-    if (!pathArray || pathArray.length != 3) {
+    // Sometimes, a path will come with a "0" instead of a "0'". This fixes it.
+    for (let i = 0; i < pathArray.length; i++) {
+      if (pathArray[i] == 0) {
+        pathArray[i] = 2147483648; // equal to "0'"
+      }
+    }
+    if (pathArray.length == 3) {
+      pathArray = this._validatePath(path + "/0'/0'");
+    }
+
+    if (!pathArray || pathArray.length != 5) {
       throw new Error(
         `"path" invalid: Invalid path length: ${pathArray.length}`
       );
