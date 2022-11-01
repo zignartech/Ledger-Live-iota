@@ -15,19 +15,14 @@ import { CurrencyNotSupported } from "@ledgerhq/errors";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import { TransactionPayload, BlockResponse, Block } from "../api/types"; //xddxd
 import { currencyBridge, sync } from "../js-synchronisation";
+import { Ed25519 } from "@cosmjs/crypto";
+import { Ed25519Address } from "@iota/iota.js";
 
 const receive = makeAccountBridgeReceive();
 
-export const txToOp = (
-  transaction: BlockResponse,
-  id: string,
-  address: string
-) => {
-  const data =
-    transaction.allOf && transaction.allOf[0]
-      ? (transaction.allOf[0] as Block)
-      : null;
-  if (!data) {
+export const txToOp = (transaction: Block, id: string, address: string) => {
+  const data = transaction ? transaction : null;
+  if (!data || !data.payload || data.payload?.type != 6) {
     return null;
   }
   /*
@@ -94,24 +89,46 @@ export const txToOp = (
   const output = outputs[0];
   const value = output.amount;
   const type = input.transactionId === id ? "OUT" : "IN";
-  const hash = "10"; // FIXME: what is this?
-  const blockHash = "15"; // and this?
-  const blockHeight = 0; // FIXME: and this?
+  const blockHeight = 10; // FIXME: and this?
 
   const op: Operation = {
-    id: `${id}-${hash}-${type}`,
-    hash,
+    id: `${id}-${type}`,
+    hash: "",
     type,
     value: new BigNumber(value),
     fee: new BigNumber(0),
-    blockHash,
+    blockHash: "",
     blockHeight: blockHeight,
     senders: [input.transactionId],
-    recipients: [address],
+    recipients: [address], //((output.unlockConditions as AddressUnlockCondition).address as Ed25519Address).toAddress(],
     accountId: id,
     date: new Date(),
     extra: {},
   };
+
+  /*throw new Error(
+    op.accountId +
+      "\n" +
+      op.blockHash +
+      "\n" +
+      op.blockHeight?.toString +
+      "\n" +
+      op.date.toString +
+      "\n" +
+      op.fee.toString +
+      "\n" +
+      op.hash +
+      "\n" +
+      op.id +
+      "\n" +
+      op.recipients[0] +
+      "\n" +
+      op.senders[0] +
+      "\n" +
+      op.type.toString +
+      "\n" +
+      op.value.toString
+  );*/
 
   return op;
 };

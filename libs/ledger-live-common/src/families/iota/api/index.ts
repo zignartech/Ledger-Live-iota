@@ -3,7 +3,7 @@ import { getEnv } from "../../../env";
 import network from "../../../network";
 import type { Operation } from "@ledgerhq/types-live";
 import { txToOp } from "../bridge/js";
-import { BlockResponse, OutputResponse, OutputsResponse } from "./types";
+import { Block, BlockResponse, OutputResponse, OutputsResponse } from "./types";
 
 const getIotaUrl = (route): string =>
   `${getEnv("API_IOTA_NODE")}${route || ""}`;
@@ -21,7 +21,7 @@ const fetchSingleTransaction = async (transactionId: string) => {
       `/api/core/v2/transactions/${transactionId.slice(0, -4)}/included-block`
     ),
   });
-  return data as BlockResponse;
+  return data as Block;
 };
 
 const fetchBalance = async (address: string) => {
@@ -37,12 +37,12 @@ const fetchBalance = async (address: string) => {
 };
 
 const fetchAllTransactions = async (address: string) => {
-  const transactions: BlockResponse[] = [];
+  const transactions: Block[] = [];
 
   const data = await fetchAllOutputs(address);
-  data.items.forEach(async (outputId) => {
-    transactions.push(await fetchSingleTransaction(outputId));
-  });
+  for (let i = 0; i < data.items.length; i++) {
+    transactions.push(await fetchSingleTransaction(data.items[i]));
+  }
   return transactions;
 };
 
