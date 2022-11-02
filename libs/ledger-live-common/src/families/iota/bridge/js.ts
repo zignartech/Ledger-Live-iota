@@ -20,7 +20,12 @@ import { Ed25519Address } from "@iota/iota.js";
 
 const receive = makeAccountBridgeReceive();
 
-export const txToOp = (transaction: Block, id: string, address: string) => {
+export const txToOp = (
+  transaction: Block,
+  id: string,
+  address: string,
+  timestamp: number
+) => {
   const data = transaction ? transaction : null;
   if (!data || !data.payload || data.payload?.type != 6) {
     return null;
@@ -102,33 +107,9 @@ export const txToOp = (transaction: Block, id: string, address: string) => {
     senders: [input.transactionId],
     recipients: [address], //((output.unlockConditions as AddressUnlockCondition).address as Ed25519Address).toAddress(],
     accountId: id,
-    date: new Date(),
+    date: new Date(timestamp * 1000),
     extra: {},
   };
-
-  /*throw new Error(
-    op.accountId +
-      "\n" +
-      op.blockHash +
-      "\n" +
-      op.blockHeight?.toString +
-      "\n" +
-      op.date.toString +
-      "\n" +
-      op.fee.toString +
-      "\n" +
-      op.hash +
-      "\n" +
-      op.id +
-      "\n" +
-      op.recipients[0] +
-      "\n" +
-      op.senders[0] +
-      "\n" +
-      op.type.toString +
-      "\n" +
-      op.value.toString
-  );*/
 
   return op;
 };

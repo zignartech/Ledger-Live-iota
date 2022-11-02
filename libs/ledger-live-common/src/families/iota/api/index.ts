@@ -3,7 +3,7 @@ import { getEnv } from "../../../env";
 import network from "../../../network";
 import type { Operation } from "@ledgerhq/types-live";
 import { txToOp } from "../bridge/js";
-import { Block, BlockResponse, OutputResponse, OutputsResponse } from "./types";
+import { Block, OutputResponse, OutputsResponse } from "./types";
 
 const getIotaUrl = (route): string =>
   `${getEnv("API_IOTA_NODE")}${route || ""}`;
@@ -24,6 +24,20 @@ const fetchSingleTransaction = async (transactionId: string) => {
   return data as Block;
 };
 
+const fetchTimestamp = async (outputId: string) => {
+  const {
+    data,
+  }: {
+    data;
+  } = await network({
+    method: "GET",
+    url: getShimmerUrl(
+      `/api/core/v2/outputs/${outputId.slice(0, -4)}/metadata`
+    ),
+  });
+  return data.milestoneTimestampBooked;
+};
+
 const fetchBalance = async (address: string) => {
   const outputs = await fetchAllOutputs(address);
   let balance = new BigNumber(0);
@@ -38,12 +52,15 @@ const fetchBalance = async (address: string) => {
 
 const fetchAllTransactions = async (address: string) => {
   const transactions: Block[] = [];
+  const timestamps: number[] = [];
 
-  const data = await fetchAllOutputs(address);
-  for (let i = 0; i < data.items.length; i++) {
-    transactions.push(await fetchSingleTransaction(data.items[i]));
+  const outputs = await fetchAllOutputs(address);
+  for (let i = 0; i < outputs.items.length; i++) {
+    transactions.push(await fetchSingleTransaction(outputs.items[i]));
+    const num = Number(await fetchTimestamp(outputs.items[i]));
+    timestamps.push(num);
   }
-  return transactions;
+  return { transactions, timestamps };
 };
 
 const fetchAllOutputs = async (address: string) => {
@@ -83,9 +100,9 @@ export const getAccount = async (address: string, accountId: string) => {
 
 export const getOperations = async (id: string, address: string) => {
   const operations: Operation[] = [];
-  const transactions = await fetchAllTransactions(address);
+  const { transactions, timestamps } = await fetchAllTransactions(address);
   for (let i = 0; i < transactions.length; i++) {
-    const operation = txToOp(transactions[i], id, address);
+    const operation = txToOp(transactions[i], id, address, timestamps[i]);
     if (operation) {
       operations.push(operation);
     }
