@@ -28,25 +28,32 @@ export const txToOp = async (
     return null;
   }
 
+  // define the outputs and inputs of the transaction / block
   const payload = data.payload as TransactionPayload;
   const essence = payload.essence;
   const outputs = essence.outputs;
+  const inputs = essence.inputs;
 
   const recipients: string[] = [];
-  const value = new BigNumber(0);
+  const senders: string[] = [];
+  let value = 0;
+  let type: "IN" | "OUT" = "IN"; // default is IN. If the address is found in an input, it will be changed to "OUT"
 
-  const transactionInputId = essence.inputs[0].transactionId; // TODO: Do it as a list of inputs
-  const senderOutput = (await fetchSingleOutput(transactionInputId)).output;
-  const senderUnlockCondition: any = senderOutput.unlockConditions[0];
-  const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
-  const senderUint8Array = Uint8Array.from(
-    senderPubKeyHash
-      .match(/.{1,2}/g) // magic
-      .map((byte: string) => parseInt(byte, 16))
-  );
-  const sender = Bech32.encode("smr", senderUint8Array);
-
-  const type = sender == address ? "OUT" : "IN";
+  for (let i = 0; i < inputs.length; i++) {
+    const transactionId = inputs[i].transactionId;
+    const senderOutput = (await fetchSingleOutput(transactionId)).output;
+    const senderUnlockCondition: any = senderOutput.unlockConditions[0];
+    const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
+    const senderUint8Array = Uint8Array.from(
+      senderPubKeyHash
+        .match(/.{1,2}/g) // magic
+        .map((byte: string) => parseInt(byte, 16))
+    );
+    // the address of the sender
+    const sender = Bech32.encode("smr", senderUint8Array);
+    senders.push(sender);
+    if (sender == address) type = "OUT";
+  }
 
   for (let o = 0; o < outputs.length; o++) {
     if (outputCheck(outputs[o])) {
@@ -58,12 +65,18 @@ export const txToOp = async (
           .match(/.{1,2}/g) // magic
           .map((byte: string) => parseInt(byte, 16))
       );
+      // the address of the recipient
       const recipient = Bech32.encode("smr", recipientUint8Array);
 
-      if (recipient == sender) continue; // it means that it's a remainder and doesn't count as a transaction
+      // In case the transaction is incoming:
+      // add to the value all amount coming into the address.
+      // If the transaction is outgoing:
+      // add to the value all amount going to other addresses.
+      const amount: number = +outputs[o].amount;
+      if (type == "IN" && recipient == address) value += amount;
+      else if (type == "OUT" && recipient != address) value += amount; // otherwise, it means that it's a remainder and doesn't count into the value
 
       recipients.push(recipient);
-      value.plus(outputs[o].amount);
     }
   }
 
@@ -71,11 +84,11 @@ export const txToOp = async (
     id: `${id}-${type}`,
     hash: data.nonce, // TODO: Pass the transaction id instead
     type,
-    value,
+    value: new BigNumber(value),
     fee: new BigNumber(0),
     blockHash: data.nonce,
     blockHeight: 10, // so it's considered a confirmed transaction
-    senders: [sender],
+    senders: senders,
     recipients,
     accountId: id,
     date: new Date(timestamp * 1000),
