@@ -22,8 +22,8 @@ import {
  */
 
 interface AddressOptions {
-  prefix: string;
-  display: boolean;
+  prefix?: string;
+  verify?: boolean;
 }
 
 /**
@@ -63,6 +63,7 @@ class Iota {
    * @param {Object} [options]
    * @param {Boolean} [options.display=false] - Display generated address on display
    * @param {Boolean} [options.prefix='iota'] - Bech32 prefix
+   * @param {Boolean} [options.verify=false] - Ask for user verification
    * @returns {Promise<String>} Tryte-encoded address
    * @example
    * iota.getAddress(0, { prefix: 'atoi' });
@@ -70,19 +71,20 @@ class Iota {
   async getAddress(
     path: string,
     currency: CryptoCurrency,
-    options: AddressOptions = {
-      display: false,
-      prefix: currency.units[0].name.toLowerCase(),
-    }
+    options: AddressOptions
   ): Promise<string> {
     log("getting address...");
+    const prefix = options.prefix
+      ? options.prefix
+      : currency.units[0].name.toLowerCase();
+
     const pathArray = Iota._validatePath(path);
 
     await this._setAccount(pathArray[2], currency);
-    await this._generateAddress(pathArray[3], pathArray[4], 1, options.display);
+    await this._generateAddress(pathArray[3], pathArray[4], 1, options.verify);
     const addressData = await this._getData();
     log("getting address done.");
-    return bech32.encode(options.prefix, bech32.toWords(addressData));
+    return bech32.encode(prefix, bech32.toWords(addressData));
   }
 
   ///////// Private methods should not be called directly! /////////
@@ -318,7 +320,7 @@ class Iota {
     change: any,
     index: any,
     count: number,
-    display = false
+    verify = false
   ): Promise<void> {
     const generateAddressInStruct = Struct()
       .word32Ule("bip32_index")
@@ -332,7 +334,7 @@ class Iota {
 
     await this._sendCommand(
       ADPUInstructions.INS_GEN_ADDRESS,
-      display ? 0x01 : 0x00,
+      verify ? 0x01 : 0x00,
       0,
       generateAddressInStruct.buffer(),
       TIMEOUT_CMD_USER_INTERACTION
