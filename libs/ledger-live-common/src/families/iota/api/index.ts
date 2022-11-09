@@ -75,7 +75,7 @@ const fetchAllOutputs = async (address: string) => {
   return data as OutputsResponse;
 };
 
-const fetchSingleOutput = async (outputId: string) => {
+export const fetchSingleOutput = async (outputId: string) => {
   const {
     data,
   }: {
@@ -87,10 +87,10 @@ const fetchSingleOutput = async (outputId: string) => {
   return data as OutputResponse;
 };
 
-export const getAccount = async (address: string, accountId: string) => {
+export const getAccount = async (address: string): Promise<any> => {
   const balance = await fetchBalance(address);
   return {
-    blockHeight: undefined, // FIXME:
+    blockHeight: 10, // FIXME:
     balance,
     spendableBalance: balance,
     nonce: undefined, // FIXME:
@@ -102,7 +102,7 @@ export const getOperations = async (id: string, address: string) => {
   const operations: Operation[] = [];
   const { transactions, timestamps } = await fetchAllTransactions(address);
   for (let i = 0; i < transactions.length; i++) {
-    const operation = txToOp(transactions[i], id, address, timestamps[i]);
+    const operation = await txToOp(transactions[i], id, address, timestamps[i]);
     if (operation) {
       operations.push(operation);
     }

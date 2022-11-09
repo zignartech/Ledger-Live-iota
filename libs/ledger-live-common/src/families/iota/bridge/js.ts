@@ -1,5 +1,4 @@
 import { BigNumber } from "bignumber.js";
-import { log } from "@ledgerhq/logs";
 import type { Account, AccountBridge, Operation } from "@ledgerhq/types-live";
 import {
   createTransaction,
@@ -8,104 +7,76 @@ import {
 } from "../js-transaction";
 import signOperation from "../js-signOperation";
 import type { Transaction, TransactionStatus } from "../types";
-import { getCryptoCurrencyById } from "../../../currencies";
-import network from "../../../network";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import { CurrencyNotSupported } from "@ledgerhq/errors";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
-import { TransactionPayload, BlockResponse, Block } from "../api/types"; //xddxd
+import { TransactionPayload, Block } from "../api/types"; //xddxd
 import { currencyBridge, sync } from "../js-synchronisation";
-import { Ed25519 } from "@cosmjs/crypto";
-import { Ed25519Address } from "@iota/iota.js";
+import { fetchSingleOutput } from "../api";
+import { Bech32 } from "@iota/crypto.js";
 
 const receive = makeAccountBridgeReceive();
 
-export const txToOp = (
+export const txToOp = async (
   transaction: Block,
   id: string,
   address: string,
   timestamp: number
-) => {
+): Promise<any> => {
   const data = transaction ? transaction : null;
   if (!data || !data.payload || data.payload?.type != 6) {
     return null;
   }
-  /*
-    Example of data:
-    {
-      "protocolVersion": 2,
-      "parents": [
-        "0x174e3151f6ce2cfb7f00829ac4a96a35caa2078cc20eba99359867cd21aad0d6",
-        "0x5807bb4ad068e6cdadd103218e4e24ed55b62c985d4f64e97808d9f09180f89c",
-        "0x7a09324557e9200f39bf493fc8fd6ac43e9ca750c6f6d884cc72386ddcb7d695",
-        "0xde9e9d780ba7ebeebc38da16cb53b2a8991d38eee94bcdc3f3ef99aa8c345652"
-      ],
-      "payload": {
-        "type": 6,
-        "essence": {
-          "type": 1,
-          "networkId": "1337133713371337",
-          "inputsCommitment": "0x0e6c2998f5177834ecb3bae1596d5056af76e487386eecb19727465b4be86a79",
-          "inputs": [
-            {
-              "type": 0,
-              "transactionId": "0xaf7579fb57746219561072c2cc0e4d0fbb8d493d075bd21bf25ae81a450c11ef",
-              "transactionOutputIndex": 0
-            }
-          ],
-          "outputs": [
-            {
-              "type": 3,
-              "unlockConditions": {
-                "type": 0,
-                "address": {
-                  "type": 0,
-                  "pubKeyHash": "0xa18996d96163405e3c0eb13fa3459a07f68a89e8cf7cc239c89e7192344daa5b"
-                }
-              },
-              "amount": "1000000"
-            }
-          ],
-          "payload": {
-            "type": 2,
-            "index": "0x454f59",
-            "data": ""
-          }
-        },
-        "unlocks": [
-          {
-            "type": 0,
-            "signature": {
-              "type": 0,
-              "publicKey": "0xee26ac07834c603c22130fced361ca58552b0dbfc63e4b73ba24b3b59d9f4050",
-              "signature": "0x0492a353f96883c472e2686a640e77eda30be8fcc417aa9fc1c15eae854661e0253287be6ea68f649f19ca590de0a6c57fb88635ef0e013310e0be2b83609503"
-            }
-          }
-        ]
-      },
-      "nonce": "17293822569102719312"
-    }
-  */
+
   const payload = data.payload as TransactionPayload;
   const essence = payload.essence;
-  const inputs = essence.inputs;
   const outputs = essence.outputs;
-  const input = inputs[0];
-  const output = outputs[0];
-  const value = output.amount;
-  const type = input.transactionId === id ? "OUT" : "IN";
-  const blockHeight = 10; // FIXME: and this?
+
+  const recipients: string[] = [];
+  const value = new BigNumber(0);
+
+  const transactionInputId = essence.inputs[0].transactionId; // TODO: Do it as a list of inputs
+  const senderOutput = (await fetchSingleOutput(transactionInputId)).output;
+  const senderUnlockCondition: any = senderOutput.unlockConditions[0];
+  const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
+  const senderUint8Array = Uint8Array.from(
+    senderPubKeyHash
+      .match(/.{1,2}/g) // magic
+      .map((byte: string) => parseInt(byte, 16))
+  );
+  const sender = Bech32.encode("smr", senderUint8Array);
+
+  const type = sender == address ? "OUT" : "IN";
+
+  for (let o = 0; o < outputs.length; o++) {
+    if (outputCheck(outputs[o])) {
+      const recipientUnlockCondition: any = outputs[o].unlockConditions[0];
+      const recipientPubKeyHash: any =
+        recipientUnlockCondition.address.pubKeyHash;
+      const recipientUint8Array = Uint8Array.from(
+        recipientPubKeyHash
+          .match(/.{1,2}/g) // magic
+          .map((byte: string) => parseInt(byte, 16))
+      );
+      const recipient = Bech32.encode("smr", recipientUint8Array);
+
+      if (recipient == sender) continue; // it means that it's a remainder and doesn't count as a transaction
+
+      recipients.push(recipient);
+      value.plus(outputs[o].amount);
+    }
+  }
 
   const op: Operation = {
     id: `${id}-${type}`,
-    hash: "",
+    hash: data.nonce, // TODO: Pass the transaction id instead
     type,
-    value: new BigNumber(value),
+    value,
     fee: new BigNumber(0),
-    blockHash: "",
-    blockHeight: blockHeight,
-    senders: [input.transactionId],
-    recipients: [address], //((output.unlockConditions as AddressUnlockCondition).address as Ed25519Address).toAddress(],
+    blockHash: data.nonce,
+    blockHeight: 10, // so it's considered a confirmed transaction
+    senders: [sender],
+    recipients,
     accountId: id,
     date: new Date(timestamp * 1000),
     extra: {},
@@ -114,34 +85,22 @@ export const txToOp = (
   return op;
 };
 
-const API_ENDPOINTS = {
-  IOTA_MAINNET: "",
-  IOTA_ALPHANET: "https://api.alphanet.iotaledger.net/",
-  SHIMMER_MAINNET: "",
-  SHIMMER_TESTNET: "https://api.testnet.shimmer.network/",
-};
-
-async function fetch(path: string) {
-  const url = API_ENDPOINTS.SHIMMER_TESTNET + path;
-  const { data } = await network({
-    method: "GET",
-    url,
-  });
-  log("http", url);
-  return data;
-}
-
-export async function fetchBlockHeight() {
-  const data = await fetch("/api/main_net/v1/get_height");
-  return data.height;
-}
-
 const getTransactionStatus = (a: Account): Promise<TransactionStatus> =>
   Promise.reject(
     new CurrencyNotSupported("iota currency not supported", {
       currencyName: a.currency.name,
     })
   );
+
+const outputCheck = (output: any): boolean => {
+  if (
+    output.type == 3 && // it's a BasicOutput
+    output.unlockConditions.length == 1 && // no other unlockConditions
+    output.unlockConditions[0].type == 0 // it's an AddressUnlockCondition
+  ) {
+    return true;
+  } else return false;
+};
 
 const accountBridge: AccountBridge<Transaction> = {
   sync,
