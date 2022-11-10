@@ -53,14 +53,16 @@ const fetchBalance = async (address: string) => {
 const fetchAllTransactions = async (address: string) => {
   const transactions: Block[] = [];
   const timestamps: number[] = [];
+  const transactionIds: string[] = [];
 
   const outputs = await fetchAllOutputs(address);
   for (let i = 0; i < outputs.items.length; i++) {
     transactions.push(await fetchSingleTransaction(outputs.items[i]));
     const num = Number(await fetchTimestamp(outputs.items[i]));
     timestamps.push(num);
+    transactionIds.push(outputs.items[i]);
   }
-  return { transactions, timestamps };
+  return { transactions, timestamps, transactionIds };
 };
 
 const fetchAllOutputs = async (address: string) => {
@@ -100,9 +102,16 @@ export const getAccount = async (address: string): Promise<any> => {
 
 export const getOperations = async (id: string, address: string) => {
   const operations: Operation[] = [];
-  const { transactions, timestamps } = await fetchAllTransactions(address);
+  const { transactions, timestamps, transactionIds } =
+    await fetchAllTransactions(address);
   for (let i = 0; i < transactions.length; i++) {
-    const operation = await txToOp(transactions[i], id, address, timestamps[i]);
+    const operation = await txToOp(
+      transactions[i],
+      id,
+      address,
+      timestamps[i],
+      transactionIds[i]
+    );
     if (operation) {
       operations.push(operation);
     }

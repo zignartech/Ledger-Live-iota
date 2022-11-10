@@ -10,11 +10,6 @@ const getAccountShape: GetAccountShape = async (info) => {
   const { address, currency, initialAccount, derivationMode } = info;
   const oldOperations = initialAccount?.operations || [];
 
-  // Needed for incremental synchronisation
-  const startAt = oldOperations.length
-    ? (oldOperations[0].blockHeight || 0) + 1
-    : 0;
-
   const accountId = encodeAccountId({
     type: "js",
     version: "2",

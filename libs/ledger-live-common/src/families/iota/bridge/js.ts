@@ -21,7 +21,8 @@ export const txToOp = async (
   transaction: Block,
   id: string,
   address: string,
-  timestamp: number
+  timestamp: number,
+  transactionId: string
 ): Promise<any> => {
   const data = transaction ? transaction : null;
   if (!data || !data.payload || data.payload?.type != 6) {
@@ -39,6 +40,7 @@ export const txToOp = async (
   let value = 0;
   let type: "IN" | "OUT" = "IN"; // default is IN. If the address is found in an input, it will be changed to "OUT"
 
+  // senders logic
   for (let i = 0; i < inputs.length; i++) {
     const transactionId = inputs[i].transactionId;
     const outputIndex = "0" + inputs[i].transactionOutputIndex;
@@ -57,6 +59,7 @@ export const txToOp = async (
     if (sender == address) type = "OUT";
   }
 
+  // receivers logic
   for (let o = 0; o < outputs.length; o++) {
     if (outputCheck(outputs[o])) {
       const recipientUnlockCondition: any = outputs[o].unlockConditions[0];
@@ -75,8 +78,7 @@ export const txToOp = async (
       // If the transaction is outgoing:
       // add to the value all amount going to other addresses.
       const amount: number = +outputs[o].amount;
-      if (type == "IN" && recipient == address && !senders.includes(address))
-        value += amount;
+      if (type == "IN" && recipient == address) value += amount;
       else if (type == "OUT" && recipient != address) value += amount; // otherwise, it means that it's a remainder and doesn't count into the value
 
       recipients.push(recipient);
@@ -84,8 +86,8 @@ export const txToOp = async (
   }
 
   const op: Operation = {
-    id: `${data.nonce}-${type}`,
-    hash: `${outputs.length}`, // TODO: Pass the transaction id instead
+    id: `${transactionId}-${type}`,
+    hash: transactionId, // TODO: Pass the transaction id instead
     type,
     value: new BigNumber(value),
     fee: new BigNumber(0),
