@@ -41,7 +41,9 @@ export const txToOp = async (
 
   for (let i = 0; i < inputs.length; i++) {
     const transactionId = inputs[i].transactionId;
-    const senderOutput = (await fetchSingleOutput(transactionId)).output;
+    const outputIndex = "0" + inputs[i].transactionOutputIndex;
+    const senderOutput = (await fetchSingleOutput(transactionId + outputIndex))
+      .output;
     const senderUnlockCondition: any = senderOutput.unlockConditions[0];
     const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
     const senderUint8Array = Uint8Array.from(
@@ -73,7 +75,8 @@ export const txToOp = async (
       // If the transaction is outgoing:
       // add to the value all amount going to other addresses.
       const amount: number = +outputs[o].amount;
-      if (type == "IN" && recipient == address) value += amount;
+      if (type == "IN" && recipient == address && !senders.includes(address))
+        value += amount;
       else if (type == "OUT" && recipient != address) value += amount; // otherwise, it means that it's a remainder and doesn't count into the value
 
       recipients.push(recipient);
@@ -81,14 +84,14 @@ export const txToOp = async (
   }
 
   const op: Operation = {
-    id: `${id}-${type}`,
-    hash: data.nonce, // TODO: Pass the transaction id instead
+    id: `${data.nonce}-${type}`,
+    hash: `${outputs.length}`, // TODO: Pass the transaction id instead
     type,
     value: new BigNumber(value),
     fee: new BigNumber(0),
-    blockHash: data.nonce,
+    blockHash: "",
     blockHeight: 10, // so it's considered a confirmed transaction
-    senders: senders,
+    senders,
     recipients,
     accountId: id,
     date: new Date(timestamp * 1000),
