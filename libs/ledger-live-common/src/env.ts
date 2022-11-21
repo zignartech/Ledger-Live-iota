@@ -100,6 +100,11 @@ const envDefinitions = {
     def: "https://api.shimmer.network",
     desc: "SHIMMER API url",
   },
+  API_SHIMMER_TESTNET_NODE: {
+    parser: stringParser,
+    def: "https://api.testnet.shimmer.network",
+    desc: "SHIMMER TESTNET API url",
+  },
   ELROND_API_ENDPOINT: {
     parser: stringParser,
     def: "https://elrond.coin.ledger.com",

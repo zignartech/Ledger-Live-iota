@@ -3362,6 +3362,35 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
       },
     ],
   },
+  shimmer_testnet: {
+    type: "CryptoCurrency",
+    id: "shimmer_testnet",
+    coinType: 4218,
+    name: "Shimmer Testnet",
+    managerAppName: "Shimmer",
+    ticker: "SMR",
+    scheme: "shimmer_testnet",
+    color: "#000000",
+    family: "iota",
+    units: [
+      {
+        name: "RMS",
+        code: "RMS",
+        magnitude: 6,
+      },
+      {
+        name: "glow",
+        code: "glow",
+        magnitude: 0,
+      },
+    ],
+    explorerViews: [
+      {
+        address: "https://explorer.shimmer.network/testnet/addr/$address",
+        tx: "https://explorer.shimmer.network/testnet/message/$hash",
+      },
+    ],
+  },
   solana_testnet: {
     type: "CryptoCurrency",
     id: "solana_testnet",

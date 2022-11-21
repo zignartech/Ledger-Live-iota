@@ -19,9 +19,12 @@ const getAccountShape: GetAccountShape = async (info) => {
   });
 
   // get the current account balance state depending your api implementation
-  const { blockHeight, balance, spendableBalance } = await getAccount(address);
+  const { blockHeight, balance, spendableBalance } = await getAccount(
+    currency.id,
+    address
+  );
   // Merge new operations with the previously synced ones
-  const newOperations = await getOperations(accountId, address);
+  const newOperations = await getOperations(accountId, currency.id, address);
   const operations = mergeOps(oldOperations, newOperations);
 
   const shape = {
