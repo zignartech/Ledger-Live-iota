@@ -17,7 +17,7 @@ const getShimmerUrl = (route): string =>
 const getShimmerTEstnetUrl = (route): string =>
   `${getEnv("API_SHIMMER_TESTNET_NODE")}${route || ""}`;
 
-const getUrl = (currencyId: string, route: string) => {
+export const getUrl = (currencyId: string, route: string): string => {
   let url = "";
   switch (currencyId) {
     case "iota":
