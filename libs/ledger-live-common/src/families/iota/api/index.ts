@@ -10,42 +10,69 @@ import {
 } from "./types";
 import { Bech32 } from "@iota/crypto.js";
 
+const getIotaUrl = (route): string =>
+  `${getEnv("API_IOTA_NODE")}${route || ""}`;
 const getShimmerUrl = (route): string =>
   `${getEnv("API_SHIMMER_NODE")}${route || ""}`;
+const getShimmerTEstnetUrl = (route): string =>
+  `${getEnv("API_SHIMMER_TESTNET_NODE")}${route || ""}`;
 
-const fetchSingleTransaction = async (transactionId: string) => {
+const getUrl = (currencyId: string, route: string) => {
+  let url = "";
+  switch (currencyId) {
+    case "iota":
+      url = getIotaUrl(route);
+      break;
+    case "shimmer":
+      url = getShimmerUrl(route);
+      break;
+    case "shimmer_testnet":
+      url = getShimmerTEstnetUrl(route);
+      break;
+    default:
+      throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
+  }
+  return url;
+};
+
+const fetchSingleTransaction = async (
+  currencyId: string,
+  transactionId: string
+) => {
   const {
     data,
   }: {
     data;
   } = await network({
     method: "GET",
-    url: getShimmerUrl(
+    url: getUrl(
+      currencyId,
       `/api/core/v2/transactions/${transactionId.slice(0, -4)}/included-block`
     ),
   });
   return data as Block;
 };
 
-const fetchTimestamp = async (outputId: string) => {
+const fetchTimestamp = async (currencyId: string, outputId: string) => {
   const {
     data,
   }: {
     data;
   } = await network({
     method: "GET",
-    url: getShimmerUrl(
+    url: getUrl(
+      currencyId,
       `/api/core/v2/outputs/${outputId.slice(0, -4)}/metadata`
     ),
   });
   return data.milestoneTimestampBooked;
 };
 
-const fetchBalance = async (address: string) => {
-  const outputs = await fetchAllOutputs(address);
+const fetchBalance = async (currecny: string, address: string) => {
+  const outputs = await fetchAllOutputs(currecny, address);
   let balance = new BigNumber(0);
   for (let i = 0; i < outputs.items.length; i++) {
-    const output = await fetchSingleOutput(outputs.items[i]);
+    const output = await fetchSingleOutput(currecny, outputs.items[i]);
     if (!output.metadata.isSpent) {
       balance = balance.plus(new BigNumber(output.output.amount));
     }
@@ -53,34 +80,37 @@ const fetchBalance = async (address: string) => {
   return balance;
 };
 
-const fetchAllTransactions = async (address: string) => {
+const fetchAllTransactions = async (currencyId: string, address: string) => {
   const transactions: Block[] = [];
   const timestamps: number[] = [];
   const transactionIds: string[] = [];
 
-  const outputs = await fetchAllOutputs(address);
+  const outputs = await fetchAllOutputs(currencyId, address);
   for (let i = 0; i < outputs.items.length; i++) {
-    transactions.push(await fetchSingleTransaction(outputs.items[i]));
-    const num = Number(await fetchTimestamp(outputs.items[i]));
+    transactions.push(
+      await fetchSingleTransaction(currencyId, outputs.items[i])
+    );
+    const num = Number(await fetchTimestamp(currencyId, outputs.items[i]));
     timestamps.push(num);
     transactionIds.push(outputs.items[i]);
   }
   return { transactions, timestamps, transactionIds };
 };
 
-const fetchAllOutputs = async (address: string) => {
+const fetchAllOutputs = async (currencyId: string, address: string) => {
   const {
     data,
   }: {
     data;
   } = await network({
     method: "GET",
-    url: getShimmerUrl(`/api/indexer/v1/outputs/basic?address=${address}`),
+    url: getUrl(currencyId, `/api/indexer/v1/outputs/basic?address=${address}`),
   });
   return data as OutputsResponse;
 };
 
 export const fetchSingleOutput = async (
+  currencyId: string,
   outputId: string
 ): Promise<OutputResponse> => {
   const {
@@ -89,13 +119,16 @@ export const fetchSingleOutput = async (
     data;
   } = await network({
     method: "GET",
-    url: getShimmerUrl(`/api/core/v2/outputs/${outputId}`),
+    url: getUrl(currencyId, `/api/core/v2/outputs/${outputId}`),
   });
   return data as OutputResponse;
 };
 
-export const getAccount = async (address: string): Promise<any> => {
-  const balance = await fetchBalance(address);
+export const getAccount = async (
+  currencyId: string,
+  address: string
+): Promise<any> => {
+  const balance = await fetchBalance(currencyId, address);
   return {
     blockHeight: 10, // FIXME:
     balance,
@@ -107,14 +140,16 @@ export const getAccount = async (address: string): Promise<any> => {
 
 export const getOperations = async (
   id: string,
+  currencyId: string,
   address: string
 ): Promise<Operation[]> => {
   const operations: Operation[] = [];
   const { transactions, timestamps, transactionIds } =
-    await fetchAllTransactions(address);
+    await fetchAllTransactions(currencyId, address);
   for (let i = 0; i < transactions.length; i++) {
     const operation = await txToOp(
       transactions[i],
+      currencyId,
       id,
       address,
       timestamps[i],
@@ -129,6 +164,7 @@ export const getOperations = async (
 
 const txToOp = async (
   transaction: Block,
+  currencyId: string,
   id: string,
   address: string,
   timestamp: number,
@@ -154,8 +190,9 @@ const txToOp = async (
   for (let i = 0; i < inputs.length; i++) {
     const transactionId = inputs[i].transactionId;
     const outputIndex = "0" + inputs[i].transactionOutputIndex;
-    const senderOutput = (await fetchSingleOutput(transactionId + outputIndex))
-      .output;
+    const senderOutput = (
+      await fetchSingleOutput(currencyId, transactionId + outputIndex)
+    ).output;
     const senderUnlockCondition: any = senderOutput.unlockConditions[0];
     const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
     const senderUint8Array = Uint8Array.from(
@@ -181,7 +218,7 @@ const txToOp = async (
           .map((byte: string) => parseInt(byte, 16))
       );
       // the address of the recipient
-      const recipient = Bech32.encode("smr", recipientUint8Array);
+      const recipient = uint8ArrayToAddress(currencyId, recipientUint8Array);
 
       // In case the transaction is incoming:
       // add to the value all amount coming into the address.
@@ -197,7 +234,7 @@ const txToOp = async (
 
   const op: Operation = {
     id: `${transactionId}-${type}`,
-    hash: transactionId, // TODO: Pass the transaction id instead
+    hash: transactionId,
     type,
     value: new BigNumber(value),
     fee: new BigNumber(0),
@@ -211,6 +248,24 @@ const txToOp = async (
   };
 
   return op;
+};
+
+const uint8ArrayToAddress = (currencyId: string, uint8Array: Uint8Array) => {
+  let address = "";
+  switch (currencyId) {
+    case "shimmer":
+      address = Bech32.encode("smr", uint8Array);
+      break;
+    case "shimmer_testnet":
+      address = Bech32.encode("rms", uint8Array);
+      break;
+    case "iota":
+      address = Bech32.encode("iota", uint8Array);
+      break;
+    default:
+      throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
+  }
+  return address;
 };
 
 const outputCheck = (output: any): boolean => {
