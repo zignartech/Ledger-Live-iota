@@ -30,7 +30,7 @@ const getUrl = (currencyId: string, route: string) => {
       url = getShimmerTEstnetUrl(route);
       break;
     default:
-      throw new Error(`string ID error: "${currencyId}" is not a valid ID`);
+      throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
   }
   return url;
 };
@@ -164,7 +164,7 @@ export const getOperations = async (
 
 const txToOp = async (
   transaction: Block,
-  currecny: string,
+  currencyId: string,
   id: string,
   address: string,
   timestamp: number,
@@ -191,7 +191,7 @@ const txToOp = async (
     const transactionId = inputs[i].transactionId;
     const outputIndex = "0" + inputs[i].transactionOutputIndex;
     const senderOutput = (
-      await fetchSingleOutput(currecny, transactionId + outputIndex)
+      await fetchSingleOutput(currencyId, transactionId + outputIndex)
     ).output;
     const senderUnlockCondition: any = senderOutput.unlockConditions[0];
     const senderPubKeyHash: any = senderUnlockCondition.address.pubKeyHash;
@@ -218,7 +218,7 @@ const txToOp = async (
           .map((byte: string) => parseInt(byte, 16))
       );
       // the address of the recipient
-      const recipient = Bech32.encode("smr", recipientUint8Array);
+      const recipient = uint8ArrayToAddress(currencyId, recipientUint8Array);
 
       // In case the transaction is incoming:
       // add to the value all amount coming into the address.
@@ -234,7 +234,7 @@ const txToOp = async (
 
   const op: Operation = {
     id: `${transactionId}-${type}`,
-    hash: transactionId, // TODO: Pass the transaction id instead
+    hash: transactionId,
     type,
     value: new BigNumber(value),
     fee: new BigNumber(0),
@@ -248,6 +248,24 @@ const txToOp = async (
   };
 
   return op;
+};
+
+const uint8ArrayToAddress = (currencyId: string, uint8Array: Uint8Array) => {
+  let address = "";
+  switch (currencyId) {
+    case "shimmer":
+      address = Bech32.encode("smr", uint8Array);
+      break;
+    case "shimmer_testnet":
+      address = Bech32.encode("rms", uint8Array);
+      break;
+    case "iota":
+      address = Bech32.encode("iota", uint8Array);
+      break;
+    default:
+      throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
+  }
+  return address;
 };
 
 const outputCheck = (output: any): boolean => {

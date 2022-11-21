@@ -133,7 +133,7 @@ class Iota {
         app_mode = AppModes.ModeShimmer;
         break;
       case "shimmer_testnet":
-        app_mode = AppModes.ModeShimmerTestnet;
+        app_mode = AppModes.ModeShimmer;
         break;
       default:
         throw new Error("packable error: " + "IncorrectP1P2");
