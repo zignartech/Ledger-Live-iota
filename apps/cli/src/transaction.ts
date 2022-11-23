@@ -136,6 +136,17 @@ export async function inferTransactions(
           ?.map((q) => new BigNumber(q));
       }
 
+      /*let output = '';
+      if (account) {
+        output += 'We have an account!\n'
+      }
+      if (transaction) {
+        output += 'We have a transaction!\n'
+      }
+      if (mainAccount) {
+        output += 'We have a mainAccount!\n'
+      }
+      throw new Error(output);*/
       return {
         account,
         transaction,
@@ -148,10 +159,12 @@ export async function inferTransactions(
     all = shuffle(all);
   }
 
+  throw new Error(all[0].account.currency.id);
   const transactions: [Transaction, TransactionStatusCommon][] = await Promise.all(
     inferTransactions(all, opts, {
       inferAmount,
     }).map(async (transaction) => {
+      throw new Error(JSON.stringify(transaction));
       const tx = await bridge.prepareTransaction(mainAccount, transaction);
       const status = await bridge.getTransactionStatus(mainAccount, tx);
       const errorKeys = Object.keys(status.errors);

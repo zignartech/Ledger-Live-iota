@@ -68,11 +68,11 @@ const fetchTimestamp = async (currencyId: string, outputId: string) => {
   return data.milestoneTimestampBooked;
 };
 
-const fetchBalance = async (currecny: string, address: string) => {
-  const outputs = await fetchAllOutputs(currecny, address);
+export const fetchBalance = async (currecnyId: string, address: string) => {
+  const outputs = await fetchAllOutputs(currecnyId, address);
   let balance = new BigNumber(0);
   for (let i = 0; i < outputs.items.length; i++) {
-    const output = await fetchSingleOutput(currecny, outputs.items[i]);
+    const output = await fetchSingleOutput(currecnyId, outputs.items[i]);
     if (!output.metadata.isSpent) {
       balance = balance.plus(new BigNumber(output.output.amount));
     }
