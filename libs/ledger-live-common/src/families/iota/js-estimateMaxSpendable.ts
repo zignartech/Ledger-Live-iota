@@ -3,7 +3,7 @@ import { dustAllowanceOutputAmount } from "./utils";
 import type { Account, AccountLike } from "@ledgerhq/types-live";
 import type { Transaction } from "./types";
 
-export default function estimateMaxSpendable({
+export default async function estimateMaxSpendable({
   account,
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   parentAccount,
@@ -15,7 +15,6 @@ export default function estimateMaxSpendable({
   transaction?: Transaction | null | undefined;
 }): Promise<BigNumber> {
   const balance = account.balance;
-
   let maxSpendable = balance.minus(dustAllowanceOutputAmount);
 
   // set max spendable to 0 if negative

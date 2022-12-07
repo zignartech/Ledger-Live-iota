@@ -1,0 +1,222 @@
+name: Desktop App - Generate Screenshots
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: The branch to generate screenshots for.
+        required: false
+      number:
+        description: The pull request number.
+        required: false
+      login:
+        description: The GitHub username that triggered the workflow
+        required: true
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref_name != 'develop' }}
+
+env:
+  comment_header: <!-- generate-screenshots-report:${{ github.run_id }} -->
+
+jobs:
+  report-start:
+    name: Report start
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: report start
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          retries: 3
+          script: |
+            const {repo: {owner, repo}, run_id} = context
+            const issue_number = ${{ github.event.inputs.number }}
+            const body = `\
+            ${{ env.comment_header }}
+            @${{ github.event.inputs.login }}
+
+            [Generating screenshots: workflow started](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            `
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number,
+              body,
+            })
+
+  pr-is-fork:
+    name: "Check if the PR is a fork"
+    uses: ledgerhq/ledger-live/.github/workflows/pr-is-fork.yml@develop
+    with:
+      non-pr-result: false
+    secrets:
+      token: ${{ secrets.COMMON_READ_ORG }}
+
+  generate-screenshots:
+    needs: [pr-is-fork]
+    if: ${{ !fromJSON(needs.pr-is-fork.outputs.pr-is-fork) }}
+    env:
+      NODE_OPTIONS: "--max-old-space-size=7168"
+      FORCE_COLOR: 3
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - ubuntu-latest
+          # - macos-latest
+          - windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event.inputs.ref != null }}
+        with:
+          ref: ${{ github.event.inputs.ref }}
+          fetch-depth: 0
+      - uses: actions/checkout@v3
+        if: ${{ !github.event.inputs.ref }}
+        with:
+          fetch-depth: 0
+      - uses: ./tools/actions/composites/setup-test-desktop
+        id: setup-test-desktop
+      - name: Checkout PR
+        if: ${{ github.event.inputs.number != null && github.event.inputs.ref == null }}
+        run: gh pr checkout ${{ github.event.inputs.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set git user
+        run: |
+          git config user.email "team-live@ledger.fr"
+          git config user.name "Team Live"
+      - name: TurboRepo local caching server
+        id: turborepo-cache-server
+        uses: ./tools/actions/turborepo-gh-cache
+        with:
+          server-token: "yolo"
+          cleanup-cache-folder: "true"
+      - uses: ./tools/actions/composites/update-snapshots-desktop
+        id: update-snapshots
+        with:
+          os: ${{ matrix.os }}
+          turbo-server-port: ${{ steps.turborepo-cache-server.outputs.port }}
+
+  generate-screenshots-mac-internal:
+    needs: [pr-is-fork]
+    if: ${{ !fromJSON(needs.pr-is-fork.outputs.pr-is-fork) }}
+    env:
+      NODE_OPTIONS: "--max-old-space-size=7168"
+      FORCE_COLOR: 3
+      PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: 1
+    runs-on: [ledger-live, macos]
+    steps:
+      - uses: actions/checkout@v3
+        if: ${{ github.event.inputs.ref != null }}
+        with:
+          fetch-depth: 0
+      - uses: actions/checkout@v3
+        if: ${{ !github.event.inputs.ref }}
+        with:
+          fetch-depth: 0
+      - uses: ./tools/actions/composites/setup-test-desktop
+        id: setup-test-desktop
+        with:
+          skip_python: true
+          skip_ruby: true
+      - name: Checkout PR
+        if: ${{ github.event.inputs.number != null && github.event.inputs.ref == null }}
+        run: gh pr checkout ${{ github.event.inputs.number }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set git user
+        run: |
+          git config user.email "team-live@ledger.fr"
+          git config user.name "Team Live"
+      - name: TurboRepo local caching server
+        id: turborepo-cache-server
+        uses: ./tools/actions/turborepo-gh-cache
+        with:
+          server-token: "yolo"
+          cleanup-cache-folder: "true"
+      - uses: ./tools/actions/composites/update-snapshots-desktop
+        id: update-snapshots
+        with:
+          os: "macos-latest"
+          turbo-server-port: ${{ steps.turborepo-cache-server.outputs.port }}
+
+  report-end:
+    needs:
+      [
+        "generate-screenshots",
+        "generate-screenshots-mac-internal",
+        "report-start",
+      ]
+    if: always()
+    name: Report end
+    runs-on: "ubuntu-latest"
+    steps:
+      - name: report jobs status
+        uses: actions/github-script@v6
+        with:
+          result-encoding: string
+          retries: 3
+          script: |
+            const {repo: {owner, repo}} = context
+            const {data: {jobs}} = await github.rest.actions.listJobsForWorkflowRun({
+              owner,
+              repo,
+              run_id: ${{ github.run_id }},
+            });
+            console.log("jobs", jobs);
+
+            const jobsStatusString = jobs
+              .filter(job => job.name.startsWith("generate-screenshots"))
+              .map(job => `${job.conclusion === "success" ? "✅" : "❌"} - [${job.name}](${job.html_url})`)
+              .join("\n")
+
+            const body = `\
+            ${{ env.comment_header }}
+            @${{ github.event.inputs.login }}
+
+            [Generating screenshots: workflow ended:](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            **Jobs status:**
+            ${jobsStatusString}
+            `
+
+            const existingComment = await github.paginate(
+              github.rest.issues.listComments,
+              {
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: ${{ github.event.inputs.number }},
+              },
+              (response, done) => {
+                const comments = response.data
+                const existingComment = comments
+                  .find(comment =>
+                    comment.user.login === 'github-actions[bot]' &&
+                    comment.body.startsWith(`${{ env.comment_header }}`));
+                if (existingComment) {
+                  done()
+                  return existingComment;
+                };
+              }
+            ).then(resPerPage => resPerPage.find(res => !!res));
+
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner,
+                repo,
+                comment_id: existingComment?.id,
+                body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: ${{ github.event.inputs.number }},
+                body,
+              })
+            }

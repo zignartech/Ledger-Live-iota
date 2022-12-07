@@ -391,6 +391,7 @@ const signOperation = ({
           for (const unlock of transactionPayload.unlocks) {
             if (unlock.type == SIGNATURE_UNLOCK_TYPE) {
               // we are assuming one address per account. This way only one input have a Signature Unlock Block
+              // TODO: More than one input can exist for one address
               signature = unlock.signature.signature;
               break;
             }

@@ -51,7 +51,9 @@ setSupportedCurrencies([
   "osmosis",
   "fantom",
   "moonbeam",
-  "iota",
+  "cronos",
+  "songbird",
+  "flare"
 ]);
 
 for (const k in process.env) setEnvUnsafe(k as EnvName, process.env[k]);

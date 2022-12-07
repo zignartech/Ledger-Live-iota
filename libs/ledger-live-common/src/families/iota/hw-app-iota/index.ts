@@ -83,7 +83,7 @@ class Iota {
     await this._setAccount(pathArray[2], currency);
     await this._generateAddress(pathArray[3], pathArray[4], 1, options.verify);
     const addressData = await this._getData();
-    log("getting address done.");
+    log("iota", "address");
     return bech32.encode(prefix, bech32.toWords(addressData));
   }
 
