@@ -1417,12 +1417,22 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
     family: "iota",
     units: [
       {
+        name: "MIOTA",
+        code: "MIOTA",
+        magnitude: 6,
+      },
+      {
         name: "IOTA",
         code: "IOTA",
-        magnitude: 8,
+        magnitude: 0,
       },
     ],
-    explorerViews: [],
+    explorerViews: [
+      {
+        address: "https://explorer.iota.org/mainnet/addr/$address",
+        tx: "https://explorer.iota.org/mainnet/message/$hash",
+      },
+    ],
   },
   iov: {
     type: "CryptoCurrency",
@@ -2315,6 +2325,35 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
     ],
     explorerViews: [],
   },
+  shimmer: {
+    type: "CryptoCurrency",
+    id: "shimmer",
+    coinType: 4218,
+    name: "Shimmer",
+    managerAppName: "Shimmer",
+    ticker: "SMR",
+    scheme: "shimmer",
+    color: "#000000",
+    family: "iota",
+    units: [
+      {
+        name: "SMR",
+        code: "SMR",
+        magnitude: 6,
+      },
+      {
+        name: "glow",
+        code: "glow",
+        magnitude: 0,
+      },
+    ],
+    explorerViews: [
+      {
+        address: "https://explorer.shimmer.network/mainnet/addr/$address",
+        tx: "https://explorer.shimmer.network/mainnet/message/$hash",
+      },
+    ],
+  },
   solana: {
     type: "CryptoCurrency",
     id: "solana",
@@ -3154,6 +3193,35 @@ export const cryptocurrenciesById: Record<string, CryptoCurrency> = {
       {
         tx: "https://crypto.org/explorer/croeseid/tx/$hash",
         address: "https://crypto.org/explorer/croeseid/account/$address",
+      },
+    ],
+  },
+  shimmer_testnet: {
+    type: "CryptoCurrency",
+    id: "shimmer_testnet",
+    coinType: 4218,
+    name: "Shimmer Testnet",
+    managerAppName: "Shimmer",
+    ticker: "SMR",
+    scheme: "shimmer_testnet",
+    color: "#000000",
+    family: "iota",
+    units: [
+      {
+        name: "RMS",
+        code: "RMS",
+        magnitude: 6,
+      },
+      {
+        name: "glow",
+        code: "glow",
+        magnitude: 0,
+      },
+    ],
+    explorerViews: [
+      {
+        address: "https://explorer.shimmer.network/testnet/addr/$address",
+        tx: "https://explorer.shimmer.network/testnet/message/$hash",
       },
     ],
   },
