@@ -1,6 +1,6 @@
+/* eslint-disable @typescript-eslint/explicit-module-boundary-types */
 import Struct from "struct";
 import bippath from "bip32-path";
-import bech32 from "bech32";
 import { getErrorMessage } from "./error";
 import Transport from "@ledgerhq/hw-transport";
 import { log } from "@ledgerhq/logs";
@@ -15,16 +15,12 @@ import {
   ED25519_SIGNATURE_LENGTH,
   AppModes,
 } from "./constants";
+import { uint8ArrayToAddress } from "../utils";
 
 /**
  * IOTA API
  * @module hw-app-iota
  */
-
-interface AddressOptions {
-  prefix?: string;
-  verify?: boolean;
-}
 
 /**
  * Class for the interaction with the Ledger IOTA application.
@@ -71,20 +67,15 @@ class Iota {
   async getAddress(
     path: string,
     currency: CryptoCurrency,
-    options: AddressOptions
+    verify?: boolean
   ): Promise<string> {
-    log("getting address...");
-    const prefix = options.prefix
-      ? options.prefix
-      : currency.units[0].name.toLowerCase();
-
     const pathArray = Iota._validatePath(path);
 
     await this._setAccount(pathArray[2], currency);
-    await this._generateAddress(pathArray[3], pathArray[4], 1, options.verify);
+    await this._generateAddress(pathArray[3], pathArray[4], 1, verify);
     const addressData = await this._getData();
-    log("iota", "address");
-    return bech32.encode(prefix, bech32.toWords(addressData));
+    const address = uint8ArrayToAddress(currency.id, addressData);
+    return address;
   }
 
   ///////// Private methods should not be called directly! /////////
@@ -97,7 +88,7 @@ class Iota {
       throw new Error('"path" invalid: ' + e.message);
     }
 
-    // Sometimes, a path will come with a "0" instead of a "0'". This fixes it.
+    // Sometimes, a path will come with a 0 instead of a 0'. This fixes it.
     for (let i = 0; i < pathArray.length; i++) {
       if (pathArray[i] == 0) {
         pathArray[i] = 2147483648; // equal to "0'"

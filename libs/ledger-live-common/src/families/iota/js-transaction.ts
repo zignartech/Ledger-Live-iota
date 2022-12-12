@@ -46,7 +46,7 @@ export async function prepareTransaction(
 ): Promise<Transaction> {
   // explicitly calculate transaction amount to account for `useAllAmount` flag (send max flow)
   // i.e. if `useAllAmount` has been toggled to true, this is where it will update the transaction to reflect that action
-  throw new Error(JSON.stringify(transaction));
+  //throw new Error(JSON.stringify(transaction));
   const amount = await calculateAmount({ account, transaction });
   //throw new Error(amount.toString());
   transaction.amount = amount;

@@ -8,13 +8,13 @@ import {
   OutputsResponse,
   TransactionPayload,
 } from "./types";
-import { Bech32 } from "@iota/crypto.js";
+import { uint8ArrayToAddress } from "../utils";
 
 const getIotaUrl = (route): string =>
   `${getEnv("API_IOTA_NODE")}${route || ""}`;
 const getShimmerUrl = (route): string =>
   `${getEnv("API_SHIMMER_NODE")}${route || ""}`;
-const getShimmerTEstnetUrl = (route): string =>
+const getShimmerTestnetUrl = (route): string =>
   `${getEnv("API_SHIMMER_TESTNET_NODE")}${route || ""}`;
 
 export const getUrl = (currencyId: string, route: string): string => {
@@ -27,7 +27,7 @@ export const getUrl = (currencyId: string, route: string): string => {
       url = getShimmerUrl(route);
       break;
     case "shimmer_testnet":
-      url = getShimmerTEstnetUrl(route);
+      url = getShimmerTestnetUrl(route);
       break;
     default:
       throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
@@ -68,7 +68,10 @@ const fetchTimestamp = async (currencyId: string, outputId: string) => {
   return data.milestoneTimestampBooked;
 };
 
-export const fetchBalance = async (currecnyId: string, address: string) => {
+export const fetchBalance = async (
+  currecnyId: string,
+  address: string
+): Promise<BigNumber> => {
   const outputs = await fetchAllOutputs(currecnyId, address);
   let balance = new BigNumber(0);
   for (let i = 0; i < outputs.items.length; i++) {
@@ -130,7 +133,7 @@ export const getAccount = async (
 ): Promise<any> => {
   const balance = await fetchBalance(currencyId, address);
   return {
-    blockHeight: 10, // FIXME:
+    blockHeight: 10,
     balance,
     spendableBalance: balance,
     nonce: undefined, // FIXME:
@@ -201,7 +204,7 @@ const txToOp = async (
         .map((byte: string) => parseInt(byte, 16))
     );
     // the address of the sender
-    const sender = Bech32.encode("smr", senderUint8Array);
+    const sender = uint8ArrayToAddress(currencyId, senderUint8Array);
     senders.push(sender);
     if (sender == address) type = "OUT";
   }
@@ -250,24 +253,7 @@ const txToOp = async (
   return op;
 };
 
-const uint8ArrayToAddress = (currencyId: string, uint8Array: Uint8Array) => {
-  let address = "";
-  switch (currencyId) {
-    case "shimmer":
-      address = Bech32.encode("smr", uint8Array);
-      break;
-    case "shimmer_testnet":
-      address = Bech32.encode("rms", uint8Array);
-      break;
-    case "iota":
-      address = Bech32.encode("iota", uint8Array);
-      break;
-    default:
-      throw new Error(`currency ID error: "${currencyId}" is not a valid ID`);
-  }
-  return address;
-};
-
+// Only outputs that have one o
 const outputCheck = (output: any): boolean => {
   if (
     output.type == 3 && // it's a BasicOutput
