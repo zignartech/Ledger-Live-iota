@@ -17,7 +17,7 @@ import {
   DataTypeEnum,
 } from "./constants";
 import { uint8ArrayToAddress } from "../utils";
-// import SpeculosTransport from "@ledgerhq/hw-transport-node-speculos";
+import SpeculosTransport from "@ledgerhq/hw-transport-node-speculos";
 
 /**
  * IOTA API
@@ -486,9 +486,9 @@ class Iota {
     data: undefined,
     timeout: number
   ): Promise<any> {
-    /*const apduPort = 9999;
-    const transport = await SpeculosTransport.open({ apduPort });*/
-    const transport = this.transport;
+    const apduPort = 9999;
+    const transport = await SpeculosTransport.open({ apduPort });
+    // const transport = this.transport;
     try {
       transport.setExchangeTimeout(timeout);
       return await transport.send(CLA, ins, p1, p2, data);
