@@ -59,3 +59,21 @@ export const uint8ArrayToAddress = (
   }
   return address;
 };
+
+export const addressToPubKeyHash = (address: string): string => {
+  let uint8Array = Bech32.decode(address)?.data;
+  if (uint8Array == undefined) {
+    throw new Error(`Could not decode address: ${address}`);
+  } else {
+    uint8Array = uint8Array as Uint8Array;
+  }
+  return "0x" + Buffer.from(uint8Array.slice(1)).toString("hex");
+};
+
+export const decimalToHex = (d: number): string => {
+  let hex = d.toString(16);
+  while (hex.length < 2) {
+    hex = "0" + hex;
+  }
+  return hex;
+};

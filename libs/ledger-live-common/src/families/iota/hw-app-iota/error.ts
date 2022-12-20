@@ -1,4 +1,4 @@
-function getStatusMessage(statusCode) {
+function getStatusMessage(statusCode: number) {
   switch (statusCode) {
     // improve text of most common errors
     case 0x9000: // SW_OK
@@ -60,7 +60,7 @@ function getStatusMessage(statusCode) {
  * @param {Integer} statusCode - Error statusCodecode
  * @returns {String} String message corresponding to error code
  */
-export function getErrorMessage(statusCode) {
+export function getErrorMessage(statusCode: any) {
   const smsg = getStatusMessage(statusCode);
   if (smsg) {
     const statusCodeStr = statusCode.toString(16);

@@ -14,8 +14,10 @@ import {
   ED25519_PUBLIC_KEY_LENGTH,
   ED25519_SIGNATURE_LENGTH,
   AppModes,
+  DataTypeEnum,
 } from "./constants";
 import { uint8ArrayToAddress } from "../utils";
+// import SpeculosTransport from "@ledgerhq/hw-transport-node-speculos";
 
 /**
  * IOTA API
@@ -34,7 +36,7 @@ class Iota {
   constructor(transport: Transport) {
     transport.decorateAppAPIMethods(
       this,
-      ["getAppVersion", "getAddres"],
+      ["getAppVersion", "getAddress"],
       "IOTA"
     );
     this.transport = transport;
@@ -141,10 +143,10 @@ class Iota {
   }
 
   async _getDataBufferState(): Promise<{
-    data_length: number;
-    data_type: any;
-    data_block_size: number;
-    data_block_count: any;
+    dataLength: number;
+    dataType: any;
+    dataBlockSize: number;
+    dataBlockCount: any;
   }> {
     const response = await this._sendCommand(
       ADPUInstructions.INS_GET_DATA_BUFFER_STATE,
@@ -155,19 +157,30 @@ class Iota {
     );
 
     const getDataBufferStateOutStruct = Struct()
-      .word16Ule("data_length")
-      .word8("data_type")
-      .word8("data_block_size")
-      .word8("data_block_count") as any;
+      .word16Ule("dataLength")
+      .word8("dataType")
+      .word8("dataBlockSize")
+      .word8("dataBlockCount") as any;
     getDataBufferStateOutStruct.setBuffer(response);
 
     const fields = getDataBufferStateOutStruct.fields;
     return {
-      data_length: fields.data_length as number,
-      data_type: fields.data_type,
-      data_block_size: fields.data_block_size as number,
-      data_block_count: fields.data_block_count,
+      dataLength: fields.dataLength as number,
+      dataType: fields.dataType,
+      dataBlockSize: fields.dataBlockSize as number,
+      dataBlockCount: fields.dataBlockCount,
     };
+  }
+
+  async _clearDataBuffer() {
+    await this._sendCommand(
+      ADPUInstructions.INS_CLEAR_DATA_BUFFER,
+      0,
+      0,
+      undefined,
+      TIMEOUT_CMD_NON_USER_INTERACTION
+    );
+    log("setting account done...");
   }
 
   async _readDataBlock({
@@ -196,10 +209,57 @@ class Iota {
     return data;
   }
 
+  // convenience function - write as many blocks as needed to transfer data to the device
+  async _writeDataBuffer(data: Buffer) {
+    // clear data buffer before data can be uploaded and validated
+    await this._clearDataBuffer();
+
+    // get buffer state
+    const dbs = await this._getDataBufferState();
+
+    // is buffer state okay? (write allowed, is empty)
+    if (dbs.dataType != DataTypeEnum.Empty.type) {
+      throw new Error("Command not Allowed: Ledger state is not 'Empty'");
+    }
+
+    // how many blocks to upload?
+    const blockSize = dbs.dataBlockSize;
+    let blocksNeeded = data.length / blockSize;
+    if (data.length % blockSize != 0) {
+      blocksNeeded += 1;
+    }
+
+    // too many blocks?
+    if (blocksNeeded > dbs.dataBlockCount) {
+      throw new Error("Invalid data passed to Ledger device");
+    }
+
+    // transfer blocks
+    for (let block = 0; block < blocksNeeded; block++) {
+      // get next chunk of data
+      let blockData = data.slice(block * blockSize, (block + 1) * blockSize);
+
+      // block has to be exactly data_block_size but last chunk can have fewer bytes
+      // fill it up to the correct size
+      if (blockData.length < blockSize) {
+        const newBlockData = new Uint16Array(blockSize);
+        newBlockData.set(blockData);
+        newBlockData.set(
+          Array<number>(blockSize - blockData.length).fill(0),
+          blockData.length
+        );
+        blockData = Buffer.from(newBlockData);
+      }
+
+      // now write block
+      await this._writeDataBlock(block, blockData);
+    }
+  }
+
   async _writeDataBlock(blockNr: number, data: any): Promise<void> {
     log("writing data block...");
     await this._sendCommand(
-      ADPUInstructions.INS_PREPARE_SIGNING,
+      ADPUInstructions.INS_WRITE_DATA_BLOCK,
       blockNr,
       0,
       data,
@@ -210,19 +270,19 @@ class Iota {
   async _getData(): Promise<Uint8Array> {
     const state = await this._getDataBufferState();
 
-    const blocks = Math.ceil(state.data_length / state.data_block_size);
-    const data = new Uint8Array(blocks * state.data_block_size);
+    const blocks = Math.ceil(state.dataLength / state.dataBlockSize);
+    const data = new Uint8Array(blocks * state.dataBlockSize);
 
     let offset = 0;
     for (let i = 0; i < blocks; i++) {
       const block = await this._readDataBlock({
         block: i,
-        size: state.data_block_size,
+        size: state.dataBlockSize,
       });
       data.set(block, offset);
       offset += block.length;
     }
-    return data.subarray(0, state.data_length);
+    return data.subarray(0, state.dataLength);
   }
 
   async _showMainFlow(): Promise<void> {
@@ -292,12 +352,12 @@ class Iota {
     bip32Change: number
   ): Promise<void> {
     const prepareSigningInStruct = Struct()
-      .word32Ule("remainder_index")
+      .word16Ule("remainder_index")
       .word32Ule("remainder_bip32_index")
       .word32Ule("remainder_bip32_change") as any;
 
     prepareSigningInStruct.allocate();
-    prepareSigningInStruct.fields.bip32_index = ramainderIdx;
+    prepareSigningInStruct.fields.remainder_index = ramainderIdx;
     prepareSigningInStruct.fields.remainder_bip32_index = bip32Idx;
     prepareSigningInStruct.fields.remainder_bip32_change = bip32Change;
 
@@ -426,6 +486,8 @@ class Iota {
     data: undefined,
     timeout: number
   ): Promise<any> {
+    /*const apduPort = 9999;
+    const transport = await SpeculosTransport.open({ apduPort });*/
     const transport = this.transport;
     try {
       transport.setExchangeTimeout(timeout);
@@ -442,4 +504,13 @@ class Iota {
 
 export default Iota;
 
-export { TIMEOUT_CMD_NON_USER_INTERACTION, ADPUInstructions };
+// 123,160,1,0,12,0,0,0,0,0,0,0,0,0,0,0,0
+// 7ba001000c000000000000000000000000
+// 7ba001000a00000000000000000000
+// 7ba000000a00000000000000000000
+// 7ba00100000
+// CLA: 7b
+// INS: a0
+// p1: 01
+// p2: 00
+// data: 0a00000000000000000000

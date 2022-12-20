@@ -31,7 +31,7 @@ export default async function getTransactionStatus(
   if (transaction.amount.eq(0) && !transaction.useAllAmount) {
     errors.amount = new AmountRequired();
   } else if (account.balance.isLessThan(amount)) {
-    errors.amount = new NotEnoughBalance("");
+    errors.amount = new NotEnoughBalance(`balance: ${account.balance}`);
   }
 
   return {

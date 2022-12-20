@@ -8,7 +8,7 @@ import {
   OutputsResponse,
   TransactionPayload,
 } from "./types";
-import { uint8ArrayToAddress } from "../utils";
+import { decimalToHex, uint8ArrayToAddress } from "../utils";
 
 const getIotaUrl = (route): string =>
   `${getEnv("API_IOTA_NODE")}${route || ""}`;
@@ -192,7 +192,7 @@ const txToOp = async (
   // senders logic
   for (let i = 0; i < inputs.length; i++) {
     const transactionId = inputs[i].transactionId;
-    const outputIndex = "0" + inputs[i].transactionOutputIndex;
+    const outputIndex = decimalToHex(inputs[i].transactionOutputIndex);
     const senderOutput = (
       await fetchSingleOutput(currencyId, transactionId + outputIndex)
     ).output;

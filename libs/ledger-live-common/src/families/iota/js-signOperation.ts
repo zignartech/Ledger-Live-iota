@@ -20,16 +20,17 @@ import {
   REFERENCE_UNLOCK_TYPE,
   SIGNATURE_UNLOCK_TYPE,
   OutputTypes,
-  Bech32Helper,
   IndexerPluginClient,
   UTXO_INPUT_TYPE,
   SingleNodeClient,
   IClient,
+  DEFAULT_PROTOCOL_VERSION,
+  IBlock,
 } from "@iota/iota.js";
 import { Blake2b } from "@iota/crypto.js";
 
 import Iota from "./hw-app-iota";
-import { getNetworkId } from "./utils";
+import { addressToPubKeyHash, decimalToHex, getNetworkId } from "./utils";
 import { Transaction } from "./types";
 
 import {
@@ -43,13 +44,7 @@ import { Observable } from "rxjs";
 import BigNumber from "bignumber.js";
 import Transport from "@ledgerhq/hw-transport";
 import { log } from "@ledgerhq/logs";
-
-const API_ENDPOINTS = {
-  IOTA_MAINNET: "",
-  IOTA_ALPHANET: "https://api.alphanet.iotaledger.net/",
-  SHIMMER_MAINNET: "",
-  SHIMMER_TESTNET: "https://api.testnet.shimmer.network/",
-};
+import { getUrl } from "./api";
 
 async function buildOptimisticOperation({
   account,
@@ -93,36 +88,28 @@ export async function buildTransactionPayload(
   account: Account,
   transport: Transport,
   transaction: Transaction
-): Promise<ITransactionPayload> {
+): Promise<{ transactionPayload: ITransactionPayload; parents: string[] }> {
   const networkId = getNetworkId(account.currency.id);
 
+  // Start with finding the outputs. They need to have
+  // a specific structure
   const outputsWithSerialization: {
     output: IBasicOutput;
     serializedBytes: Uint8Array;
     serializedHex: string;
   }[] = [];
 
-  const output = {
-    address: transaction.recipient,
-    amount: transaction.amount,
-  };
-
-  const iota = new Iota(transport);
-
-  const client = new SingleNodeClient(API_ENDPOINTS.SHIMMER_TESTNET);
-
-  const inputs = await calculateInputs(account, client, [output]);
-
+  const pubKeyHash = addressToPubKeyHash(transaction.recipient);
   const o: IBasicOutput = {
     type: BASIC_OUTPUT_TYPE,
-    amount: output.amount.toString(),
+    amount: transaction.amount.toString(),
     nativeTokens: [],
     unlockConditions: [
       {
         type: ADDRESS_UNLOCK_CONDITION_TYPE,
         address: {
           type: ED25519_ADDRESS_TYPE,
-          pubKeyHash: output.address,
+          pubKeyHash: pubKeyHash as string,
         },
       },
     ],
@@ -136,6 +123,18 @@ export async function buildTransactionPayload(
     serializedBytes: finalBytes,
     serializedHex: Converter.bytesToHex(finalBytes),
   });
+
+  // Find the inputs. For this, we need to use a Client
+  // that depends on the cryptocurrency we are sending.
+  const iota = new Iota(transport);
+  const api_endpoint = getUrl(account.currency.id, "");
+  const client = new SingleNodeClient(api_endpoint);
+
+  const output = {
+    address: transaction.recipient,
+    amount: transaction.amount,
+  };
+  const { inputs, parents } = await calculateInputs(account, client, [output]);
 
   const inputsSerialized: {
     input: IUTXOInput;
@@ -177,17 +176,18 @@ export async function buildTransactionPayload(
     inputs: inputsSerialized.map((i) => i.input),
     inputsCommitment,
     outputs: outputsWithSerialization.map((o) => o.output),
+    //outputs: [output as IBasicOutput],
     payload: undefined,
   };
 
   const binaryEssence = new WriteStream();
   serializeTransactionEssence(binaryEssence, transactionEssence);
-  const essenceFinal = binaryEssence.finalBytes();
+  const essenceFinal = Buffer.from(binaryEssence.finalBytes());
 
   // write essence to the Ledger device data buffer and let the user confirm it.
-  iota._writeDataBlock(0, essenceFinal.buffer);
-  iota._prepareSigning(0, 0, 0, 0); //TODO: Fill correct values when remainder exists
-  iota._userConfirmEssence();
+  await iota._writeDataBuffer(essenceFinal);
+  await iota._prepareSigning(0, 0, 0, 0); //TODO: Fill correct values when remainder exists
+  await iota._userConfirmEssence();
 
   // Create the unlock blocks
   const unlocks: UnlockTypes[] = [];
@@ -217,7 +217,7 @@ export async function buildTransactionPayload(
     unlocks,
   };
 
-  return transactionPayload;
+  return { transactionPayload, parents };
 }
 
 /**
@@ -234,17 +234,16 @@ export async function calculateInputs(
   client: IClient | string,
   outputs: { address: string; amount: BigNumber }[],
   zeroCount = 5
-): Promise<
-  {
+): Promise<{
+  inputs: {
     input: IUTXOInput;
     address: string;
     consumingOutput: OutputTypes;
-  }[]
-> {
+  }[];
+  parents: string[];
+}> {
   const localClient =
     typeof client === "string" ? new SingleNodeClient(client) : client;
-
-  const protocolInfo = await localClient.protocolInfo();
 
   let requiredBalance: BigNumber = new BigNumber(0);
   for (const output of outputs) {
@@ -257,20 +256,15 @@ export async function calculateInputs(
     address: string;
     consumingOutput: OutputTypes;
   }[] = [];
+  const parents: string[] = [];
   let finished = false;
   let zeroBalance = 0;
 
   do {
     const address = account.freshAddress;
-    const addressBytes = Converter.utf8ToBytes(address);
-
     const indexerPlugin = new IndexerPluginClient(client);
     const addressOutputIds = await indexerPlugin.basicOutputs({
-      addressBech32: Bech32Helper.toBech32(
-        ED25519_ADDRESS_TYPE,
-        addressBytes,
-        protocolInfo.bech32Hrp
-      ),
+      addressBech32: address,
     });
 
     if (addressOutputIds.items.length === 0) {
@@ -305,6 +299,10 @@ export async function calculateInputs(
               address,
               consumingOutput: addressOutput.output,
             });
+
+            const parent =
+              input.transactionId + decimalToHex(input.transactionOutputIndex);
+            parents.push(parent);
 
             if (consumedBalance >= requiredBalance) {
               // We didn't use all the balance from the last input
@@ -343,7 +341,7 @@ export async function calculateInputs(
     );
   }
 
-  return inputs;
+  return { inputs, parents };
 }
 
 /**
@@ -374,7 +372,7 @@ const signOperation = ({
           });
           log("building transaction payload...");
 
-          const transactionPayload = await buildTransactionPayload(
+          const { transactionPayload, parents } = await buildTransactionPayload(
             account,
             transport,
             transaction
@@ -384,30 +382,26 @@ const signOperation = ({
             type: "device-signature-granted",
           });
 
-          const recipients: string[] = [];
+          const recipients: string[] = [transaction.recipient];
           const value = transaction.amount;
-
-          let signature = "";
-          for (const unlock of transactionPayload.unlocks) {
-            if (unlock.type == SIGNATURE_UNLOCK_TYPE) {
-              // we are assuming one address per account. This way only one input have a Signature Unlock Block
-              // TODO: More than one input can exist for one address
-              signature = unlock.signature.signature;
-              break;
-            }
-          }
-
+          const block: IBlock = {
+            protocolVersion: DEFAULT_PROTOCOL_VERSION,
+            parents: parents,
+            payload: transactionPayload,
+            nonce: "0",
+          };
           const operation = await buildOptimisticOperation({
             account: account,
             value: new BigNumber(value),
             recipients: recipients,
             senders: [account.freshAddress], // we are assuming one address per account.
           });
+
           o.next({
             type: "signed",
             signedOperation: {
               operation,
-              signature: signature,
+              signature: JSON.stringify(block),
               expirationDate: null,
             },
           });

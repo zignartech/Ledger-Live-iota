@@ -11,6 +11,7 @@ overrides:
   metro-transform-worker: ^0.67.0
   remove-flow-types-loader>flow-remove-types: ^2
   remove-flow-types-loader>loader-utils: '*'
+  '@iota/util.js': '*1.9.0-stardust.5'
 
 patchedDependencies:
   react-native-fast-crypto@2.2.0:
@@ -38,6 +39,7 @@ importers:
     specifiers:
       '@changesets/changelog-github': ^0.4.6
       '@changesets/cli': ^2.24.3
+      '@types/struct': ^0.0.3
       create-release-hash: workspace:*
       migrate-branch: workspace:*
       pnpm-utils: workspace:*
@@ -47,6 +49,7 @@ importers:
     devDependencies:
       '@changesets/changelog-github': 0.4.6
       '@changesets/cli': 2.24.3
+      '@types/struct': 0.0.3
       create-release-hash: link:tools/create-release-hash
       migrate-branch: link:tools/migrate-branch
       pnpm-utils: link:tools/pnpm-utils
@@ -970,7 +973,7 @@ importers:
       '@hashgraph/sdk': ^2.10.1
       '@iota/crypto.js': ^1.8.6
       '@iota/iota.js': 1.9.0-stardust.28
-      '@iota/util.js': 1.9.0-stardust.5
+      '@iota/util.js': '*1.9.0-stardust.5'
       '@keplr-wallet/cosmos': ^0.9.16
       '@keplr-wallet/proto-types': ^0.10.4
       '@ledgerhq/compressjs': github:LedgerHQ/compressjs#d9e8e4d994923e0ea76a32b97289bcccfe71b82e
@@ -1992,7 +1995,7 @@ importers:
       documentation: 13.2.4
       jest: ^28.1.1
       lodash: ^4.17.21
-      node-hid: ^2.1.2
+      node-hid: ^2.1.1
       rimraf: '*'
       source-map-support: '*'
       ts-jest: ^28.0.5
@@ -11126,7 +11129,7 @@ packages:
     resolution: {integrity: sha512-bmsBL+gEJVlT1KgkOqjIkPsyNs5VV9MyrAWo9UAYdGNxfyH+KeYiiRzIaQwwhCzUkncuNzlCTbEo2qRJQoKETg==}
     engines: {node: '>=14.0.0'}
     dependencies:
-      '@iota/util.js': 1.8.6
+      '@iota/util.js': 1.9.0-stardust.5
       big-integer: 1.6.51
     dev: false
 
@@ -11148,13 +11151,6 @@ packages:
       node-fetch: 2.6.7
     transitivePeerDependencies:
       - encoding
-    dev: false
-
-  /@iota/util.js/1.8.6:
-    resolution: {integrity: sha512-vQRYU0bDKORGFzeoN2zn7tO4Kjqv+h2P/J//MRspg9Kyy1TKgtGkn0j0M2ZSwJjScH6Cn2BQmRLet/ZBpg6osA==}
-    engines: {node: '>=14.0.0'}
-    dependencies:
-      big-integer: 1.6.51
     dev: false
 
   /@iota/util.js/1.9.0-stardust.5:
@@ -19248,6 +19244,12 @@ packages:
   /@types/stack-utils/2.0.1:
     resolution: {integrity: sha512-Hl219/BT5fLAaz6NDkSuhzasy49dwQS/DSdu4MdggFB8zcXv7vflBI3xp7FEmkmdDkBUI2bPUNeMttp2knYdxw==}
 
+  /@types/struct/0.0.3:
+    resolution: {integrity: sha512-Sqs3Dv95exdr8R/DrcszIdR/BazkPHCyhYvZpQgiWv3l477kV5ghiubNpXysAIOBEmK41bMOjj7cStMQ+YGfyQ==}
+    dependencies:
+      '@types/node': 17.0.32
+    dev: true
+
   /@types/styled-components-react-native/5.1.3_@types+react@17.0.45:
     resolution: {integrity: sha512-IXaogtizUkHJNzSxihG4KK3Z+jaHFp4XyHYIh/I7SUHCc1DsBxToQpE33JITPkgP6DzfgeDn9JkGBGhDIy+GIQ==}
     peerDependencies:
@@ -26910,7 +26912,7 @@ packages:
     dev: true
 
   /detect-libc/1.0.3:
-    resolution: {integrity: sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=}
+    resolution: {integrity: sha512-pGjwhsmsp4kL2RTz08wcOlGN83otlqHeD/Z5T8GXZB+/YcpQ/dgo+lbU8ZsGxV0HIvqqxo9l7mqYwyYMD9bKDg==}
     engines: {node: '>=0.10'}
     hasBin: true
     dev: false

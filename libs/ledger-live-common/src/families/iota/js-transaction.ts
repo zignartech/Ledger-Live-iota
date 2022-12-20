@@ -26,7 +26,6 @@ export function updateTransaction(
   transaction: Transaction,
   patch: Partial<Transaction>
 ): Transaction {
-  //throw new Error("updating tx");
   return { ...transaction, ...patch };
 }
 
