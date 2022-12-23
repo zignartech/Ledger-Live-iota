@@ -10,6 +10,7 @@ import type { Transaction } from "../types";
 import { makeAccountBridgeReceive } from "../../../bridge/jsHelpers";
 import estimateMaxSpendable from "../js-estimateMaxSpendable";
 import { currencyBridge, sync } from "../js-synchronisation";
+import broadcast from "../js-broadcast";
 
 const receive = makeAccountBridgeReceive();
 
@@ -22,9 +23,7 @@ const accountBridge: AccountBridge<Transaction> = {
   estimateMaxSpendable,
   receive,
   signOperation,
-  broadcast: () => {
-    throw new Error("broadcast not implemented");
-  },
+  broadcast,
 };
 export default {
   accountBridge,

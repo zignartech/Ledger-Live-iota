@@ -30,7 +30,12 @@ import {
 import { Blake2b } from "@iota/crypto.js";
 
 import Iota from "./hw-app-iota";
-import { addressToPubKeyHash, decimalToHex, getNetworkId } from "./utils";
+import {
+  addressToPubKeyHash,
+  arrayToHex,
+  getNetworkId,
+  deviceResponseToUint8Array,
+} from "./utils";
 import { Transaction } from "./types";
 
 import {
@@ -45,6 +50,10 @@ import BigNumber from "bignumber.js";
 import Transport from "@ledgerhq/hw-transport";
 import { log } from "@ledgerhq/logs";
 import { getUrl } from "./api";
+import {
+  ED25519_PUBLIC_KEY_LENGTH,
+  ED25519_SIGNATURE_LENGTH,
+} from "./hw-app-iota/constants";
 
 async function buildOptimisticOperation({
   account,
@@ -88,7 +97,7 @@ export async function buildTransactionPayload(
   account: Account,
   transport: Transport,
   transaction: Transaction
-): Promise<{ transactionPayload: ITransactionPayload; parents: string[] }> {
+): Promise<ITransactionPayload> {
   const networkId = getNetworkId(account.currency.id);
 
   // Start with finding the outputs. They need to have
@@ -134,7 +143,7 @@ export async function buildTransactionPayload(
     address: transaction.recipient,
     amount: transaction.amount,
   };
-  const { inputs, parents } = await calculateInputs(account, client, [output]);
+  const inputs = await calculateInputs(account, client, [output]);
 
   const inputsSerialized: {
     input: IUTXOInput;
@@ -176,12 +185,15 @@ export async function buildTransactionPayload(
     inputs: inputsSerialized.map((i) => i.input),
     inputsCommitment,
     outputs: outputsWithSerialization.map((o) => o.output),
-    //outputs: [output as IBasicOutput],
     payload: undefined,
   };
 
   const binaryEssence = new WriteStream();
   serializeTransactionEssence(binaryEssence, transactionEssence);
+  const path = account.freshAddresses[0].derivationPath; // for stardust, only the first address is used (change = 0)
+  const pathArray = Iota._validatePath(path);
+  binaryEssence.writeUInt32("bip32_index", pathArray[3]);
+  binaryEssence.writeUInt32("bip32_change", pathArray[4]);
   const essenceFinal = Buffer.from(binaryEssence.finalBytes());
 
   // write essence to the Ledger device data buffer and let the user confirm it.
@@ -194,18 +206,27 @@ export async function buildTransactionPayload(
 
   for (let index = 0; index < inputsSerialized.length; index++) {
     const response = await iota._signSingle(index);
-    if (response.signature_type) {
+    if (response.fields.signature_type) {
       unlocks.push({
         type: REFERENCE_UNLOCK_TYPE,
         reference: response.reference,
       });
     } else {
+      // parse device response to a hexadecimal string
+      const publicKey = deviceResponseToUint8Array(
+        response.fields.ed25519_public_key,
+        ED25519_PUBLIC_KEY_LENGTH
+      );
+      const signature = deviceResponseToUint8Array(
+        response.fields.ed25519_signature,
+        ED25519_SIGNATURE_LENGTH
+      );
       unlocks.push({
         type: SIGNATURE_UNLOCK_TYPE,
         signature: {
           type: ED25519_SIGNATURE_TYPE,
-          publicKey: response.ed25519_public_key,
-          signature: response.ed25519_signature,
+          publicKey: arrayToHex(publicKey),
+          signature: arrayToHex(signature),
         },
       });
     }
@@ -217,7 +238,7 @@ export async function buildTransactionPayload(
     unlocks,
   };
 
-  return { transactionPayload, parents };
+  return transactionPayload;
 }
 
 /**
@@ -234,14 +255,13 @@ export async function calculateInputs(
   client: IClient | string,
   outputs: { address: string; amount: BigNumber }[],
   zeroCount = 5
-): Promise<{
-  inputs: {
+): Promise<
+  {
     input: IUTXOInput;
     address: string;
     consumingOutput: OutputTypes;
-  }[];
-  parents: string[];
-}> {
+  }[]
+> {
   const localClient =
     typeof client === "string" ? new SingleNodeClient(client) : client;
 
@@ -256,7 +276,6 @@ export async function calculateInputs(
     address: string;
     consumingOutput: OutputTypes;
   }[] = [];
-  const parents: string[] = [];
   let finished = false;
   let zeroBalance = 0;
 
@@ -300,10 +319,6 @@ export async function calculateInputs(
               consumingOutput: addressOutput.output,
             });
 
-            const parent =
-              input.transactionId + decimalToHex(input.transactionOutputIndex);
-            parents.push(parent);
-
             if (consumedBalance >= requiredBalance) {
               // We didn't use all the balance from the last input
               // so return the rest to the same address.
@@ -341,7 +356,7 @@ export async function calculateInputs(
     );
   }
 
-  return { inputs, parents };
+  return inputs;
 }
 
 /**
@@ -372,7 +387,7 @@ const signOperation = ({
           });
           log("building transaction payload...");
 
-          const { transactionPayload, parents } = await buildTransactionPayload(
+          const transactionPayload = await buildTransactionPayload(
             account,
             transport,
             transaction
@@ -386,7 +401,7 @@ const signOperation = ({
           const value = transaction.amount;
           const block: IBlock = {
             protocolVersion: DEFAULT_PROTOCOL_VERSION,
-            parents: parents,
+            parents: [],
             payload: transactionPayload,
             nonce: "0",
           };

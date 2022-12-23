@@ -77,3 +77,22 @@ export const decimalToHex = (d: number): string => {
   }
   return hex;
 };
+
+export const arrayToHex = (byteArray: number[] | Uint8Array): string => {
+  let s = "0x";
+  byteArray.forEach(function (byte) {
+    s += ("0" + (byte & 0xff).toString(16)).slice(-2);
+  });
+  return s;
+};
+
+export const deviceResponseToUint8Array = (
+  array: any,
+  length: number
+): Uint8Array => {
+  const uint8Array = new Uint8Array(length);
+  for (let i = 0; i < length; i++) {
+    uint8Array[i] = array[i];
+  }
+  return uint8Array;
+};

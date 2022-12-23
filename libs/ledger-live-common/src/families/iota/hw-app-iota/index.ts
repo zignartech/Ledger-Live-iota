@@ -16,7 +16,7 @@ import {
   AppModes,
   DataTypeEnum,
 } from "./constants";
-import { uint8ArrayToAddress } from "../utils";
+import { deviceResponseToUint8Array, uint8ArrayToAddress } from "../utils";
 import SpeculosTransport from "@ledgerhq/hw-transport-node-speculos";
 
 /**
@@ -202,11 +202,7 @@ class Iota {
     readDataBlockOutStruct.setBuffer(response);
     const fields = readDataBlockOutStruct.fields;
 
-    const data = new Uint8Array(size);
-    for (let i = 0; i < size; i++) {
-      data[i] = fields.data[i];
-    }
-    return data;
+    return deviceResponseToUint8Array(fields.data, size);
   }
 
   // convenience function - write as many blocks as needed to transfer data to the device
@@ -396,7 +392,7 @@ class Iota {
   }
 
   async _userConfirmEssence(): Promise<void> {
-    this._sendCommand(
+    await this._sendCommand(
       ADPUInstructions.INS_USER_CONFIRM_ESSENCE,
       0,
       0,
@@ -414,7 +410,7 @@ class Iota {
       TIMEOUT_CMD_NON_USER_INTERACTION
     );
     const signatureType = response.at(0);
-    const data = Struct();
+    const data = Struct() as any;
     switch (signatureType) {
       case 0:
         data
@@ -422,9 +418,11 @@ class Iota {
           .word8("unknown") // TODO: replace with correct block name
           .array("ed25519_public_key", ED25519_PUBLIC_KEY_LENGTH, "word8")
           .array("ed25519_signature", ED25519_SIGNATURE_LENGTH, "word8");
+        data.setBuffer(response);
         break;
       case 1:
         data.word8("signature_type").array("reference", 2, "word8");
+        data.setBuffer(response);
         break;
       default:
         throw new Error("packable error: " + "Invalid variant");
@@ -486,6 +484,7 @@ class Iota {
     data: undefined,
     timeout: number
   ): Promise<any> {
+    // For Speculos testing, change the transaport to this:
     const apduPort = 9999;
     const transport = await SpeculosTransport.open({ apduPort });
     // const transport = this.transport;
@@ -503,14 +502,3 @@ class Iota {
 }
 
 export default Iota;
-
-// 123,160,1,0,12,0,0,0,0,0,0,0,0,0,0,0,0
-// 7ba001000c000000000000000000000000
-// 7ba001000a00000000000000000000
-// 7ba000000a00000000000000000000
-// 7ba00100000
-// CLA: 7b
-// INS: a0
-// p1: 01
-// p2: 00
-// data: 0a00000000000000000000

@@ -44,8 +44,11 @@ importers:
       migrate-branch: workspace:*
       pnpm-utils: workspace:*
       rimraf: ^3.0.2
+      struct: ^0.0.12
       turbo: ^1.6.1
       zx: ^7.0.7
+    dependencies:
+      struct: 0.0.12
     devDependencies:
       '@changesets/changelog-github': 0.4.6
       '@changesets/cli': 2.24.3
@@ -973,6 +976,7 @@ importers:
       '@hashgraph/sdk': ^2.10.1
       '@iota/crypto.js': ^1.8.6
       '@iota/iota.js': 1.9.0-stardust.28
+      '@iota/pow-node.js': ^1.8.6
       '@iota/util.js': '*1.9.0-stardust.5'
       '@keplr-wallet/cosmos': ^0.9.16
       '@keplr-wallet/proto-types': ^0.10.4
@@ -1156,6 +1160,7 @@ importers:
       '@hashgraph/sdk': 2.14.2
       '@iota/crypto.js': 1.8.6
       '@iota/iota.js': 1.9.0-stardust.28
+      '@iota/pow-node.js': 1.8.6
       '@iota/util.js': 1.9.0-stardust.5
       '@keplr-wallet/cosmos': 0.9.16
       '@keplr-wallet/proto-types': 0.10.4
@@ -11141,6 +11146,18 @@ packages:
       big-integer: 1.6.51
     dev: false
 
+  /@iota/iota.js/1.8.6:
+    resolution: {integrity: sha512-KkUgYS+bde2v5ThjQsVWOECdRH1ym0atUod6TPk9YR05xNpVFq/kt4N/QBKqYv0ysLCL/EjR6mVZCrc5mE6CHA==}
+    engines: {node: '>=14.0.0'}
+    dependencies:
+      '@iota/crypto.js': 1.8.6
+      '@iota/util.js': 1.9.0-stardust.5
+      big-integer: 1.6.51
+      node-fetch: 2.6.7
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
   /@iota/iota.js/1.9.0-stardust.28:
     resolution: {integrity: sha512-SWI6OGH7aq7Kl7WG8y8DyFOfGI/sKHE6Z3O83cyNFZNh9EOYgBL39KQO1RNJK7jg4OVhcHv6h/GxAhVRhpWkyA==}
     engines: {node: '>=14.0.0'}
@@ -11149,6 +11166,16 @@ packages:
       '@iota/util.js': 1.9.0-stardust.5
       big-integer: 1.6.51
       node-fetch: 2.6.7
+    transitivePeerDependencies:
+      - encoding
+    dev: false
+
+  /@iota/pow-node.js/1.8.6:
+    resolution: {integrity: sha512-HECoLYAMeivbjuvjIk7ycwJAnXOUxtEy/WCbB0ycj3mgtG2Yrm5qMIWlqABMJchzKE8utxQenUQpjZc8xqH88Q==}
+    engines: {node: '>=12.0.0'}
+    dependencies:
+      '@iota/crypto.js': 1.8.6
+      '@iota/iota.js': 1.8.6
     transitivePeerDependencies:
       - encoding
     dev: false
@@ -32080,7 +32107,7 @@ packages:
     resolution: {integrity: sha512-0btnI/H8f2pavGMN8w40mlSKOfTK2SVJmBfBeVIj3kNw0swwgzyRq0d5TJVOwodFmtvpPeWPN/MCcfuWF0Ezbw==}
 
   /figures/1.7.0:
-    resolution: {integrity: sha1-y+Hjr/zxzUS4DK3+0o3Hk6lwHS4=}
+    resolution: {integrity: sha512-UxKlfCRuCBxSXU4C6t9scbDyWZ4VlaFFdojKtzJuSkuOBQ5CNFum+zZXFwHjo+CxBC1t6zlYPgHIgFjL8ggoEQ==}
     engines: {node: '>=0.10.0'}
     dependencies:
       escape-string-regexp: 1.0.5
@@ -55389,7 +55416,7 @@ packages:
     engines: {node: '>=0.10.0'}
 
   /wordwrap/1.0.0:
-    resolution: {integrity: sha1-J1hIEIkUVqQXHI0CJkQa3pDLyus=}
+    resolution: {integrity: sha512-gvVzJFlPycKc5dZN4yPkP8w7Dc37BtP1yczEneOb4uq34pXZcvrtRTmWV8W+Ume+XCxKgbjM+nevkyFPMybd4Q==}
 
   /wordwrapjs/4.0.1:
     resolution: {integrity: sha512-kKlNACbvHrkpIw6oPeYDSmdCTu2hdMHoyXLTcUKala++lx5Y+wjJ/e474Jqv5abnVmwxw08DiTuHmw69lJGksA==}

@@ -142,6 +142,7 @@
     "@hashgraph/sdk": "^2.10.1",
     "@iota/crypto.js": "^1.8.6",
     "@iota/iota.js": "1.9.0-stardust.28",
+    "@iota/pow-node.js": "^1.8.6",
     "@iota/util.js": "*1.9.0-stardust.5",
     "@keplr-wallet/cosmos": "^0.9.16",
     "@keplr-wallet/proto-types": "^0.10.4",
