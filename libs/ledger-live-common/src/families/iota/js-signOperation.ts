@@ -102,14 +102,11 @@ export async function buildTransactionPayload(
 
   // Start with finding the outputs. They need to have
   // a specific structure
-  const outputsWithSerialization: {
-    output: IBasicOutput;
-    serializedBytes: Uint8Array;
-    serializedHex: string;
-  }[] = [];
 
   const pubKeyHash = addressToPubKeyHash(transaction.recipient);
-  const o: IBasicOutput = {
+  const outputs: IBasicOutput[] = [];
+  // add the basic output to the outputs list
+  outputs.push({
     type: BASIC_OUTPUT_TYPE,
     amount: transaction.amount.toString(),
     nativeTokens: [],
@@ -118,19 +115,11 @@ export async function buildTransactionPayload(
         type: ADDRESS_UNLOCK_CONDITION_TYPE,
         address: {
           type: ED25519_ADDRESS_TYPE,
-          pubKeyHash: pubKeyHash as string,
+          pubKeyHash: pubKeyHash,
         },
       },
     ],
     features: [],
-  };
-  const writeStream = new WriteStream();
-  serializeOutput(writeStream, o);
-  const finalBytes = writeStream.finalBytes();
-  outputsWithSerialization.push({
-    output: o,
-    serializedBytes: finalBytes,
-    serializedHex: Converter.bytesToHex(finalBytes),
   });
 
   // Find the inputs. For this, we need to use a Client
@@ -143,7 +132,10 @@ export async function buildTransactionPayload(
     address: transaction.recipient,
     amount: transaction.amount,
   };
-  const inputs = await calculateInputs(account, client, [output]);
+  // consumed balance is the balance all inputs together are consuming.
+  const { inputs, consumedBalance } = await calculateInputs(account, client, [
+    output,
+  ]);
 
   const inputsSerialized: {
     input: IUTXOInput;
@@ -179,12 +171,32 @@ export async function buildTransactionPayload(
     true
   );
 
+  // If we didn't use all the balance from the inputs,
+  // return the rest to the sender address as a remainder.
+  if (consumedBalance.minus(transaction.amount).isGreaterThan(0)) {
+    outputs.push({
+      type: BASIC_OUTPUT_TYPE,
+      amount: BigNumber(consumedBalance).minus(transaction.amount).toString(),
+      nativeTokens: [],
+      unlockConditions: [
+        {
+          type: ADDRESS_UNLOCK_CONDITION_TYPE,
+          address: {
+            type: ED25519_ADDRESS_TYPE,
+            pubKeyHash: addressToPubKeyHash(account.freshAddress),
+          },
+        },
+      ],
+      features: [],
+    });
+  }
+
   const transactionEssence: ITransactionEssence = {
     type: TRANSACTION_ESSENCE_TYPE,
     networkId,
     inputs: inputsSerialized.map((i) => i.input),
     inputsCommitment,
-    outputs: outputsWithSerialization.map((o) => o.output),
+    outputs: outputs,
     payload: undefined,
   };
 
@@ -198,7 +210,16 @@ export async function buildTransactionPayload(
 
   // write essence to the Ledger device data buffer and let the user confirm it.
   await iota._writeDataBuffer(essenceFinal);
-  await iota._prepareSigning(0, 0, 0, 0); //TODO: Fill correct values when remainder exists
+
+  // If the outputs length is two, a remainder exists
+  // and the ledger must know what output index it is.
+  if (outputs.length == 2) {
+    await iota._prepareSigning(1, 1, 0, 0);
+  } else {
+    await iota._prepareSigning(0, 0, 0, 0);
+  }
+
+  // let the user confirm the transaction.
   await iota._userConfirmEssence();
 
   // Create the unlock blocks
@@ -255,13 +276,14 @@ export async function calculateInputs(
   client: IClient | string,
   outputs: { address: string; amount: BigNumber }[],
   zeroCount = 5
-): Promise<
-  {
+): Promise<{
+  inputs: {
     input: IUTXOInput;
     address: string;
     consumingOutput: OutputTypes;
-  }[]
-> {
+  }[];
+  consumedBalance: BigNumber;
+}> {
   const localClient =
     typeof client === "string" ? new SingleNodeClient(client) : client;
 
@@ -279,7 +301,7 @@ export async function calculateInputs(
   let finished = false;
   let zeroBalance = 0;
 
-  do {
+  while (!finished) {
     const address = account.freshAddress;
     const indexerPlugin = new IndexerPluginClient(client);
     const addressOutputIds = await indexerPlugin.basicOutputs({
@@ -319,44 +341,22 @@ export async function calculateInputs(
               consumingOutput: addressOutput.output,
             });
 
-            if (consumedBalance >= requiredBalance) {
-              // We didn't use all the balance from the last input
-              // so return the rest to the same address.
-              if (
-                consumedBalance.minus(requiredBalance).isGreaterThan(0) &&
-                addressOutput.output.type === BASIC_OUTPUT_TYPE
-              ) {
-                const addressUnlockCondition =
-                  addressOutput.output.unlockConditions.find(
-                    (u) => u.type === ADDRESS_UNLOCK_CONDITION_TYPE
-                  );
-                if (
-                  addressUnlockCondition &&
-                  addressUnlockCondition.type ===
-                    ADDRESS_UNLOCK_CONDITION_TYPE &&
-                  addressUnlockCondition.address.type === ED25519_ADDRESS_TYPE
-                ) {
-                  outputs.push({
-                    amount: consumedBalance.minus(requiredBalance),
-                    address: addressUnlockCondition.address.pubKeyHash,
-                  });
-                }
-              }
+            if (consumedBalance.isGreaterThanOrEqualTo(requiredBalance)) {
               finished = true;
             }
           }
         }
       }
     }
-  } while (!finished);
+  }
 
-  if (consumedBalance < requiredBalance) {
+  if (consumedBalance.isLessThan(requiredBalance)) {
     throw new Error(
       "There are not enough funds in the inputs for the required balance"
     );
   }
 
-  return inputs;
+  return { inputs, consumedBalance };
 }
 
 /**

@@ -487,7 +487,7 @@ class Iota {
     // For Speculos testing, change the transaport to this:
     const apduPort = 9999;
     const transport = await SpeculosTransport.open({ apduPort });
-    // const transport = this.transport;
+    //const transport = this.transport;
     try {
       transport.setExchangeTimeout(timeout);
       return await transport.send(CLA, ins, p1, p2, data);
