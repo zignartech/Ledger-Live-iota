@@ -190,6 +190,7 @@ export async function buildTransactionPayload(
       features: [],
     });
   }
+  // TODO: sort outputs
 
   const transactionEssence: ITransactionEssence = {
     type: TRANSACTION_ESSENCE_TYPE,
@@ -212,15 +213,19 @@ export async function buildTransactionPayload(
   await iota._writeDataBuffer(essenceFinal);
 
   // If the outputs length is two, a remainder exists
-  // and the ledger must know what output index it is.
+  // and the ledger device must know what output index it is.
   if (outputs.length == 2) {
-    await iota._prepareSigning(1, 1, 0, 0);
+    await iota._prepareSigning(1, 1, 0x80000000, 0x80000000);
   } else {
-    await iota._prepareSigning(0, 0, 0, 0);
+    await iota._prepareSigning(0, 0, 0x80000000, 0x80000000);
   }
 
   // let the user confirm the transaction.
+  await iota._showSigningFlow();
   await iota._userConfirmEssence();
+  await iota._showSignedSuccessfullyFlow();
+  await new Promise((resolve) => setTimeout(resolve, 2000)); // wait 1 second
+  await iota._showMainFlow();
 
   // Create the unlock blocks
   const unlocks: UnlockTypes[] = [];
